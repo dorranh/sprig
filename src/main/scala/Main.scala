@@ -1,3 +1,5 @@
+package dev.appalachian.sprig.server
+
 @main def hello: Unit =
   println("Hello world!")
   println(msg)

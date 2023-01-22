@@ -33,3 +33,6 @@ metals.sbt
 
 # direnv
 .direnv
+
+# Build artifacts
+artifacts
