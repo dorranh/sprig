@@ -1,0 +1,36 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  run:
+    name: Build and Run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v19
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Cache sbt
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.sbt
+            ~/.ivy2/cache
+            ~/.coursier/cache/v1
+            ~/.cache/coursier/v1
+            ~/AppData/Local/Coursier/Cache/v1
+            ~/Library/Caches/Coursier/v1
+          key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: Compile and test
+        run: sbt test
+
+      - name: Build native image
+        run: sbt nativeImage
