@@ -8,7 +8,7 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.default = pkgs.mkShell {
-        packages = [ pkgs.sbt pkgs.openjdk_headless pkgs.zlib];
+        packages = [ pkgs.sbt pkgs.openjdk_headless pkgs.zlib pkgs.graalvm11];
       };
     });
 }
