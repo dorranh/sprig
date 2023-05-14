@@ -11,11 +11,24 @@ import io.grpc.Metadata
 import cats.effect.IOApp
 import cats.effect.ExitCode
 
-import com.example.protos.sprig.{GreeterFs2Grpc, HelloRequest, HelloReply}
+import com.example.protos.sprig.{
+  GreeterFs2Grpc,
+  HelloRequest,
+  HelloReply,
+  GetDataRequest,
+  GetDataResponse
+}
 
 class ServerImplementation extends GreeterFs2Grpc[IO, Metadata] {
   def sayHello(request: HelloRequest, ctx: Metadata): IO[HelloReply] =
     IO.pure(HelloReply(message = "hello there :)"))
+
+  def getData(request: GetDataRequest, ctx: Metadata): IO[GetDataResponse] =
+    IO.pure(
+      GetDataResponse(foo =
+        f"Howdy! You requested data for use in the following call site: ${request.callerInfo}"
+      )
+    )
 }
 
 val grpcService: Resource[IO, ServerServiceDefinition] =
