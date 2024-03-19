@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from pydantic.types import UUID4
 
 from typing import TextIO
+import glob
+import os
 
 
 class Structure(Enum):
@@ -40,7 +42,7 @@ class RowConfig(BaseModel):
 class Sprig(BaseModel):
     _id: UUID4
     name: str
-    storage: Storage
+    storage: LocalStorage  # This does not serialize as the subtype
     structure: Structure
     read_config: RowConfig  # FIXME
 
@@ -53,7 +55,7 @@ def tracked(func):
         sprig: Sprig = args[0]
         with open(f"./sprigs/{sprig.name}.sprig", "w") as f:
             print(sprig.model_dump_json(), file=f)
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -63,6 +65,7 @@ def read_rows(sprig: Sprig, start: int = 0, stop: int | None = None):
     stream = sprig.storage.open()
     # FIXME - Just for prototyping I am loading everything into memory
     lines = [l.rstrip("\n") for l in stream.readlines()]
+    stream.close()
     # This is my own stupid csv parser. Let's add a more robust one in the future,
     #   most likely pyarrow
     if stop is not None:
@@ -78,12 +81,27 @@ def read_rows(sprig: Sprig, start: int = 0, stop: int | None = None):
 def read(sprig: Sprig):
     match sprig.structure:
         case Structure.ROWS:
-            read_rows(sprig, start=sprig.read_config.start, stop=sprig.read_config.stop)
+            return read_rows(
+                sprig, start=sprig.read_config.start, stop=sprig.read_config.stop
+            )
         case _:
             raise RuntimeError("Explode!")
 
 
+class Basket:
+    """Methods for managing / reading sprigs"""
+
+    def list_sprigs(self) -> list[str]:
+        files = glob.glob("./sprigs/*.sprig")
+        return [os.path.basename(os.path.splitext(f)[0]) for f in files]
+
+    def get_sprig(self, name: str) -> Sprig:
+        with open(f"sprigs/{name}.sprig") as f:
+            return Sprig.model_validate_json(f.read())
+
+
 def main():
+    # In this example we CREATE a sprig
     sprig = Sprig(
         _id=uuid4(),
         name="demo-sprig",
@@ -92,6 +110,19 @@ def main():
         storage=LocalStorage(path="./example-data/my-dataset.csv"),
     )
     print(f"Here is your sprig: {sprig}")
+    print(read(sprig))
+
+    print()
+    print("Sprigs in the basket:")
+    print(Basket().list_sprigs())
+    # TODO: Workflow for reading existing sprigs
+
+    my_analysis()
+
+
+def my_analysis():
+    sprig = Basket().get_sprig("demo-sprig")
+    print(sprig)
     print(read(sprig))
 
 

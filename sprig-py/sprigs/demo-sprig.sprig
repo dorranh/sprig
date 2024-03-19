@@ -1,1 +1,1 @@
-{"name":"demo-sprig","storage":{},"structure":"rows","read_config":{"start":0,"stop":null}}
+{"name":"demo-sprig","storage":{"path":"./example-data/my-dataset.csv"},"structure":"rows","read_config":{"start":0,"stop":null}}
