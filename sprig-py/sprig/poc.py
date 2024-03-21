@@ -26,7 +26,10 @@ class StorageConfig:
 
 
 class Storage(BaseModel):
-    def open(self) -> BinaryIO:  # FIXME: This should probably be BytesIO instead
+    def open(self) -> BinaryIO:
+        ...
+
+    def open_for_write(self) -> BinaryIO:
         ...
 
 
@@ -35,6 +38,9 @@ class LocalStorage(Storage):
 
     def open(self):
         return open(self.path, "rb")
+
+    def open_for_write(self) -> BinaryIO:
+        return open(self.path, "wb")
 
 
 class RowConfig(BaseModel):
@@ -49,6 +55,31 @@ class Sprig(BaseModel):
     structure: Structure
     format: Format
     read_config: RowConfig  # FIXME
+
+    @classmethod
+    def from_rows(
+        cls, name: str, rows: "Rows", storage: LocalStorage, format: Format = Format.CSV
+    ) -> "Sprig":
+        # Write the sprig
+        # TODO [Dorran] Pick back up here
+        stream = storage.open_for_write()
+        write_rows(rows, format, stream)
+        stream.close()
+        sprig = Sprig(
+            _id=uuid4(),
+            name=name,
+            storage=storage,
+            format=format,
+            read_config=RowConfig(start=0, stop=None),
+            structure=Structure.ROWS,
+        )
+        # FIXME: Do something cleaner here when it comes to writing out metadata
+        with open(f"./sprigs/{sprig.name}.sprig", "w") as f:
+            print(sprig.model_dump_json(), file=f)
+        return sprig
+
+
+# TODO: Need to implement constructors for creating a Sprig from in-memory data
 
 
 # TODO: Decorator for grabbing metadata from read call
@@ -90,6 +121,14 @@ def read_rows(sprig: Sprig, start: int = 0, stop: int | None = None) -> Rows:
             raise RuntimeError(f"Unsupported format: {sprig.format}")
 
 
+def write_rows(rows: Rows, format: Format, stream: BinaryIO) -> None:
+    match format:
+        case Format.CSV:
+            csv.write_csv(rows._table, stream)
+        case _:
+            raise RuntimeError(f"Unsupported format: {format}")
+
+
 def read(sprig: Sprig) -> Rows:  # TODO: Add other return types
     match sprig.structure:
         case Structure.ROWS:
@@ -119,7 +158,7 @@ def main():
         name="demo-sprig",
         structure=Structure.ROWS,
         format=Format.CSV,
-        read_config=RowConfig(start=0, stop=None),
+        read_config=RowConfig(start=2, stop=None),
         storage=LocalStorage(path="./example-data/my-dataset.csv"),
     )
     print(f"Here is your sprig: {sprig}")
@@ -132,11 +171,35 @@ def main():
 
     my_analysis()
 
+    another_analysis()
+
 
 def my_analysis():
+    "Reads a pre-existing sprig"
     sprig = Basket().get_sprig("demo-sprig")
     print(sprig)
-    print(read(sprig).to_pandas())
+    df = read(sprig).to_pandas()
+    print(df)
+
+    # Do some stuff to the data
+    df["new_column"] = 4242
+
+    # TODO: Pick back up here
+    new_sprig = Sprig.from_rows(
+        "my-updated-sprig",
+        Rows(Table.from_pandas(df)),
+        storage=LocalStorage(path="./example-data/my-updated-data.csv"),
+    )
+
+    print(new_sprig)
+
+
+def another_analysis():
+    """Depends on sprig generated in my_analysis"""
+    sprig = Basket().get_sprig("my-updated-sprig")
+    print(sprig)
+    df = read(sprig).to_pandas()
+    print(df)
 
 
 if __name__ == "__main__":
