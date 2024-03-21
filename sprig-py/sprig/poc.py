@@ -1,9 +1,12 @@
+import pandas as pd
+from dataclasses import dataclass
 from enum import Enum
 from uuid import uuid4
 from pydantic import BaseModel
 from pydantic.types import UUID4
+from pyarrow import Table, csv
 
-from typing import TextIO
+from typing import NewType, BinaryIO
 import glob
 import os
 
@@ -23,7 +26,7 @@ class StorageConfig:
 
 
 class Storage(BaseModel):
-    def open(self) -> TextIO:  # FIXME: This should probably be BytesIO instead
+    def open(self) -> BinaryIO:  # FIXME: This should probably be BytesIO instead
         ...
 
 
@@ -31,7 +34,7 @@ class LocalStorage(Storage):
     path: str
 
     def open(self):
-        return open(self.path)
+        return open(self.path, "rb")
 
 
 class RowConfig(BaseModel):
@@ -44,6 +47,7 @@ class Sprig(BaseModel):
     name: str
     storage: LocalStorage  # This does not serialize as the subtype
     structure: Structure
+    format: Format
     read_config: RowConfig  # FIXME
 
 
@@ -60,25 +64,33 @@ def tracked(func):
     return wrapper
 
 
+# Note: This is the integration layer for sprig data to the types you want to use
+# in your analysis, 3rd party libs, etc.
+
+
+@dataclass
+class Rows:
+    _table: Table  # type: ignore
+
+    def to_pandas(self) -> pd.DataFrame:
+        return self._table.to_pandas()
+
+
 @tracked
-def read_rows(sprig: Sprig, start: int = 0, stop: int | None = None):
-    stream = sprig.storage.open()
-    # FIXME - Just for prototyping I am loading everything into memory
-    lines = [l.rstrip("\n") for l in stream.readlines()]
-    stream.close()
-    # This is my own stupid csv parser. Let's add a more robust one in the future,
-    #   most likely pyarrow
-    if stop is not None:
-        slice = lines[start:stop]
-    else:
-        slice = lines[start:]
-    rows = []
-    for x in slice:
-        rows.append(x.split(","))
-    return rows
+def read_rows(sprig: Sprig, start: int = 0, stop: int | None = None) -> Rows:
+    match sprig.format:
+        case Format.CSV:
+            # FIXME: Check for format for csv vs avro etc. Right now we are only
+            # parsing CSV files.
+            stream = sprig.storage.open()
+            # FIXME: This loads the whole thing into memory
+            table: Table = csv.read_csv(stream)
+            return Rows(table.slice(start, stop))
+        case _:
+            raise RuntimeError(f"Unsupported format: {sprig.format}")
 
 
-def read(sprig: Sprig):
+def read(sprig: Sprig) -> Rows:  # TODO: Add other return types
     match sprig.structure:
         case Structure.ROWS:
             return read_rows(
@@ -106,11 +118,12 @@ def main():
         _id=uuid4(),
         name="demo-sprig",
         structure=Structure.ROWS,
+        format=Format.CSV,
         read_config=RowConfig(start=0, stop=None),
         storage=LocalStorage(path="./example-data/my-dataset.csv"),
     )
     print(f"Here is your sprig: {sprig}")
-    print(read(sprig))
+    print(read(sprig).to_pandas())
 
     print()
     print("Sprigs in the basket:")
@@ -123,7 +136,7 @@ def main():
 def my_analysis():
     sprig = Basket().get_sprig("demo-sprig")
     print(sprig)
-    print(read(sprig))
+    print(read(sprig).to_pandas())
 
 
 if __name__ == "__main__":
