@@ -1,12 +1,14 @@
+import click
 import pandas as pd
 from dataclasses import dataclass
 from enum import Enum
 from uuid import uuid4
 from pydantic import BaseModel
 from pydantic.types import UUID4
-from pyarrow import Table, csv
+from pyarrow import Table, csv, ipc
+import subprocess
 
-from typing import NewType, BinaryIO
+from typing import NewType, BinaryIO, Tuple
 import glob
 import os
 
@@ -79,9 +81,6 @@ class Sprig(BaseModel):
         return sprig
 
 
-# TODO: Need to implement constructors for creating a Sprig from in-memory data
-
-
 # TODO: Decorator for grabbing metadata from read call
 # TODO: Add support for tracking callsite
 def tracked(func):
@@ -151,6 +150,41 @@ class Basket:
             return Sprig.model_validate_json(f.read())
 
 
+class LocalBasket:
+    """"""
+
+    def read_sprig_rows(self, name: str) -> Rows:
+        # Call the CLI and get the arrow ipc stream it outputs
+        stream = subprocess.Popen(
+            f"sprig --name {name}", shell=True, stdout=subprocess.PIPE
+        )
+        reader = ipc.open_stream(stream.stdout)
+        data = reader.read_all()
+        return Rows(data)
+
+
+@click.command()
+@click.option("--name", required=True)
+def cli(name: str):
+    """Mock-up of the sprig executable
+
+    Returns a stream (to stdout) containing the sprig's contents
+    """
+    # TODO: This could be configured as remote or local
+    basket = Basket()
+
+    # TODO: Fail gracefully here
+    sprig = basket.get_sprig(name)
+
+    # TODO: Might want to be doing a streaming read instead
+    data = read(sprig)
+
+    stdout = click.get_binary_stream("stdout")
+    writer = ipc.new_stream(stdout, data._table.schema)
+    writer.write(data._table)  # TODO: Do we want to use write_table() instead?
+    writer.close()
+
+
 def main():
     # In this example we CREATE a sprig
     sprig = Sprig(
@@ -172,6 +206,10 @@ def main():
     my_analysis()
 
     another_analysis()
+
+    print("Calling executable and reading its output:")
+    print(LocalBasket().read_sprig_rows("demo-sprig"))
+    print("DONE!")
 
 
 def my_analysis():
