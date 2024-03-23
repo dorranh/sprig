@@ -1,1 +1,10 @@
-{"name":"my-updated-sprig","storage":{"path":"./example-data/my-updated-data.csv"},"structure":"rows","format":"csv","read_config":{"start":0,"stop":null}}
+format: csv
+id: e76e722e-922c-4282-bfa8-b634cf91ccc3
+name: my-updated-sprig
+read_config:
+  start: 0
+  stop: null
+storage:
+  path: ./example-data/my-updated-data.csv
+structure: rows
+

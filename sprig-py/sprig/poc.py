@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from pydantic.types import UUID4
 from pyarrow import Table, csv, ipc
 import subprocess
+import yaml
 
 from typing import NewType, BinaryIO, Tuple
 import glob
@@ -51,7 +52,7 @@ class RowConfig(BaseModel):
 
 
 class Sprig(BaseModel):
-    _id: UUID4
+    id: UUID4
     name: str
     storage: LocalStorage  # This does not serialize as the subtype
     structure: Structure
@@ -68,7 +69,7 @@ class Sprig(BaseModel):
         write_rows(rows, format, stream)
         stream.close()
         sprig = Sprig(
-            _id=uuid4(),
+            id=uuid4(),
             name=name,
             storage=storage,
             format=format,
@@ -77,7 +78,7 @@ class Sprig(BaseModel):
         )
         # FIXME: Do something cleaner here when it comes to writing out metadata
         with open(f"./sprigs/{sprig.name}.sprig", "w") as f:
-            print(sprig.model_dump_json(), file=f)
+            print(yaml.dump(sprig.model_dump(mode="json")), file=f)
         return sprig
 
 
@@ -88,7 +89,7 @@ def tracked(func):
         # FIXME: do something less silly here
         sprig: Sprig = args[0]
         with open(f"./sprigs/{sprig.name}.sprig", "w") as f:
-            print(sprig.model_dump_json(), file=f)
+            print(yaml.dump(sprig.model_dump(mode="json")), file=f)
         return func(*args, **kwargs)
 
     return wrapper
@@ -147,7 +148,7 @@ class Basket:
 
     def get_sprig(self, name: str) -> Sprig:
         with open(f"sprigs/{name}.sprig") as f:
-            return Sprig.model_validate_json(f.read())
+            return Sprig.model_validate(yaml.safe_load(f))
 
 
 class LocalBasket:
@@ -188,7 +189,7 @@ def cli(name: str):
 def main():
     # In this example we CREATE a sprig
     sprig = Sprig(
-        _id=uuid4(),
+        id=uuid4(),
         name="demo-sprig",
         structure=Structure.ROWS,
         format=Format.CSV,
