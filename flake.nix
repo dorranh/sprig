@@ -1,8 +1,7 @@
 {
-  description = "A basic flake with a shell";
+  description = "The Nix flake for Sprig. Currently this only provides a dev shell.";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
-
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
@@ -14,11 +13,11 @@
             pkgs.sbt
             pkgs.openjdk_headless
             pkgs.zlib
-            # pkgs.protobuf
+            pkgs.coursier
             pkgs.graalvm11
             python
             pkgs.poetry
-            pkgs.nixfmt
+            pkgs.alejandra
           ];
 
           shellHook = ''

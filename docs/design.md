@@ -61,6 +61,8 @@ analysis scripts). In this case the system might need to run remotely or in some
 kind of join local-remote set-up so that metadata can be centrally tracked /
 shared.
 
+![concept](./integration-concept.png)
+
 ## Technical Spec
 
 > This is a work in progress
