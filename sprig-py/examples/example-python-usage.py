@@ -12,7 +12,7 @@ import yaml
 from typing import NewType, BinaryIO, Tuple
 import glob
 import os
-
+from pprint import pprint
 from sprig.model import *
 from sprig.client.basket import LocalBasket
 
@@ -35,48 +35,58 @@ from sprig.client.basket import LocalBasket
 
 
 def main():
+    print("This is an example script which leverages sprig. Let's get started.")
+
     basket = LocalBasket()
 
-    print("Sprigs in the basket:")
-    print(basket.list_sprigs())
+    print("First lets list the sprigs available to us:")
+    pprint(basket.list_sprigs())
 
-    print("Running first analysis script")
+    # FIXME: Add an example of importing existing data into a new sprig
 
-    my_analysis()
+    print("Running first example 'analysis'")
+    my_analysis(basket)
 
     print("Running a second analysis script which depends on the output of the first")
-    another_analysis()
-
-    print("Calling executable and reading its output:")
-    print(LocalBasket().read_sprig_rows("demo-sprig"))
-    print("DONE!")
+    another_analysis(basket)
 
 
 def my_analysis(basket: LocalBasket):
     "Reads a pre-existing sprig"
+    print("Getting sprig for further analysis...")
     sprig = basket.get_sprig("demo-sprig")
-    print(sprig)
-    df = read(sprig).to_pandas()
+
+    print("Now we can read it. Let's output it as a Pandas Dataframe:")
+    df = basket.read_sprig(sprig.name).to_pandas()
     print(df)
 
+    print("Updating our data to include a new column")
     # Do some stuff to the data
     df["new_column"] = 4242
+    print(df)
 
-    # TODO: Pick back up here
-    new_sprig = Sprig.from_rows(
-        "my-updated-sprig",
-        Rows(Table.from_pandas(df)),
-        storage=LocalStorage(path="./example-data/my-updated-data.csv"),
+    print(
+        "If we want to save this as a "
+        "new sprig for consumption downstream we can do that too"
     )
 
+    # When we create a sprig from some in-memory data, it gets written to the
+    # specified storage.
+    new_sprig = basket.create_from_rows(
+        "my-new-sprig",
+        Rows.from_pandas(df),
+        LocalStorageConfig(path="example-data/my-updated-data.csv"),
+    )
+
+    print("The new sprig:")
     print(new_sprig)
 
 
-def another_analysis():
+def another_analysis(basket: LocalBasket):
     """Depends on sprig generated in my_analysis"""
-    sprig = Basket().get_sprig("my-updated-sprig")
+    sprig = basket.get_sprig("my-new-sprig")
     print(sprig)
-    df = read(sprig).to_pandas()
+    df = basket.read_sprig(sprig.name).to_pandas()
     print(df)
 
 

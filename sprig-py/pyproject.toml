@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "sprig"}]
 
 [tool.poetry.scripts]
-sprig = 'sprig.poc:cli'
+sprig = 'sprig.app.cli:cli'
 
 [tool.poetry.dependencies]
 python = "^3.10"

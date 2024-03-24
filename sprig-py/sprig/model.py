@@ -56,3 +56,7 @@ class Rows:
 
     def to_pandas(self) -> pd.DataFrame:
         return self._table.to_pandas()
+
+    @classmethod
+    def from_pandas(cls, df: pd.DataFrame) -> "Rows":
+        return cls(Table.from_pandas(df))
