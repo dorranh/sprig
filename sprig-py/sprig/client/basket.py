@@ -1,12 +1,11 @@
-from io import BytesIO
-from pyarrow import ipc
+import json
 import subprocess
-
+from io import BytesIO
 from typing import Protocol
 
-from sprig.model import LocalStorageConfig, Rows, Sprig, StorageConfig
+from pyarrow import ipc
 
-import json
+from sprig.model import LocalStorageConfig, Rows, Sprig, StorageConfig
 
 
 class Basket(Protocol):
@@ -45,7 +44,7 @@ class LocalBasket(Basket):
     """
 
     def list_sprigs(self) -> list[Sprig]:
-        stream = subprocess.Popen(f"sprig list", shell=True, stdout=subprocess.PIPE)
+        stream = subprocess.Popen("sprig list", shell=True, stdout=subprocess.PIPE)
         stream.wait(timeout=10)
         result = stream.stdout.read()  # type: ignore
         names = json.loads(result)["sprigs"]  # type: ignore

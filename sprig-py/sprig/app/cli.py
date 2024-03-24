@@ -1,10 +1,10 @@
-import click
-
-from pyarrow import ipc
 import json
 
-from sprig.app.repo import LocalRepo
+import click
+from pyarrow import ipc
+
 from sprig.app import io
+from sprig.app.repo import LocalRepo
 from sprig.app.storage import LocalStorage
 from sprig.model import LocalStorageConfig, Rows
 
@@ -67,9 +67,6 @@ def get(name: str):
 # FIXME: Add arg for format, etc.
 def create(name: str, path: str):
     """Constructs a new sprig from the data passed via stdin"""
-    # TODO: Make this configurable
-    repo = LocalRepo()
-
     stdin = click.get_binary_stream("stdin")
     stdout = click.get_binary_stream("stdout")
 

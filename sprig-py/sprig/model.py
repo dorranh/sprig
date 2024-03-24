@@ -1,20 +1,13 @@
 """
 Core types, primarily for use in the client.
 """
-import click
-import pandas as pd
 from dataclasses import dataclass
 from enum import Enum
-from uuid import uuid4
+
+import pandas as pd
+from pyarrow import Table
 from pydantic import BaseModel
 from pydantic.types import UUID4
-from pyarrow import Table, csv, ipc
-import subprocess
-import yaml
-
-from typing import NewType, BinaryIO, Tuple
-import glob
-import os
 
 
 class Structure(Enum):

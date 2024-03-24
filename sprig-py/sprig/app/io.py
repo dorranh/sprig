@@ -1,21 +1,11 @@
-import click
-import pandas as pd
-from dataclasses import dataclass
-from enum import Enum
+from typing import BinaryIO
 from uuid import uuid4
-from pydantic import BaseModel
-from pydantic.types import UUID4
-from pyarrow import Table, csv, ipc
-import subprocess
+
 import yaml
+from pyarrow import Table, csv
 
-from typing import NewType, BinaryIO, Tuple
-import glob
-import os
-
-
-from sprig.model import Rows, Format, Structure, Sprig, RowConfig
 from sprig.app.storage import LocalStorage
+from sprig.model import Format, RowConfig, Rows, Sprig, Structure
 
 
 def sprig_from_rows(

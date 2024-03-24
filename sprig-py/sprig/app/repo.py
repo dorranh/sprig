@@ -1,12 +1,11 @@
 import glob
-from pathlib import Path
-import yaml
-
 import os
+from pathlib import Path
 
-from sprig.model import Sprig
+import yaml
 from pydantic.dataclasses import dataclass
 
+from sprig.model import Sprig
 
 SPRIG_EXT = "sprig"
 """File extension for sprig files"""
