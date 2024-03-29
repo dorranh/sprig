@@ -1,3 +1,6 @@
+# Ignore lockfiles for client lib
+clients/**/poetry.lock
+
 # macOS
 .DS_Store
 
