@@ -5,12 +5,6 @@ on:
   push:
 
 
-name: "Test"
-
-on:
-  pull_request:
-  push:
-
 jobs:
   tests:
     strategy:
@@ -41,4 +35,3 @@ jobs:
     # - name: Run a single command in the devenv shell
     #   run: devenv shell hello
     #
-
