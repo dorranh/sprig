@@ -11,7 +11,7 @@ workflows, but you might find that it is quite handy in other settings as well!
 ## Installation
 
 Sprig has not yet been released, so you will need to build / install it manually
-to try it out. See the [Development](##Development) section for more details.
+to try it out. See the [Development](#development) section for more details.
 
 ## Elevator pitch
 
