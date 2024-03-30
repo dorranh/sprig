@@ -73,6 +73,10 @@ Sprig also supports writing out intermediate datasets which you generate during
 your analyses. This allows you to build out more complex data analysis pipelines
 and share your intermediate results for consumption in other projects as well.
 
+#### Examples
+
+A variety of example projects using sprig can be found in the [`examples`](./examples/) directory.
+
 ### Python
 
 You use a `Basket` for interacting with sprig. For example, to list sprigs
