@@ -1,9 +1,8 @@
 [tool.poetry]
-name = "sprig-py"
+name = "sprig-poc-backend"
 version = "0.0.1"
-description = "Sprig's Python client"
+description = "PoC implementation of the Sprig back-end"
 authors = ["Dorran Howell <dorran.howell@gmail.com>"]
-readme = "README.md"
 packages = [{include = "sprig"}]
 
 [tool.poetry.scripts]

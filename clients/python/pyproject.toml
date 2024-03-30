@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "sprig-py"
+version = "0.0.1"
+description = "Sprig's Python client"
+authors = ["Dorran Howell <dorran.howell@gmail.com>"]
+packages = [{include = "sprig"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyarrow = "^15.0.2"
+
+sprig-poc-backend = {path = "../../src", develop = true}
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+pytest = "^7.3.1"
+hypothesis = "^6.75.3"
+pyright = "^1.1.308"
+ruff = "^0.3.4"
+fawltydeps = "^0.15.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+lint.select = ["F", "I"]

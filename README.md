@@ -14,7 +14,7 @@ When analyzing data or building a model, one often ends up following a fairly co
 
 But wait, a month later you need to re-run your analysis. What were those files that went into it again?
 
-Now your colleague has asked for you to share your work so they can build on top of it, but they haven't got a clue as to what data your Jupyter notebook reads. After a long Slack exchange and digging into your code, it looks like it reads `./my-great-dataset-v1.csv`, but neither of you can remember where that file originates from or can be found now. 
+Now your colleague has asked for you to share your work so they can build on top of it, but they haven't got a clue as to what data your Jupyter notebook reads. After a long Slack exchange and digging into your code, it looks like it reads `./my-great-dataset-v1.csv`, but neither of you can remember where that file originates from or can be found now.
 
 Sprig is a lightweight tool which aims to alleviate some of these headaches. You use sprig as a layer for accessing your data, whether that be CSV files on a network share, delta files in your company's data lake, or some database query you've concocted. When you access your data using sprig, it automatically keeps track of what data you access, recording this information locally in a format which is human readable and can also be checked into version control if desired.
 
