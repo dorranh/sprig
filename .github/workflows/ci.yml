@@ -22,16 +22,6 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       # Enable Actions caching for our local Nix builds
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      # Enable devenv's cache as well
-      - uses: cachix/cachix-action@v14
-        with:
-          name: devenv
-      # FIXME: Add a Nix flake to avoid having to install via nix profile
-      - run: nix profile install nixpkgs#devenv
 
-      - name: Build the devenv shell and run any pre-commit hooks
-        run: devenv test
-
-    # - name: Run a single command in the devenv shell
-    #   run: devenv shell hello
-    #
+      - name: Build and lint the project
+        run: nix develop --command 'just'
