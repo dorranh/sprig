@@ -1,4 +1,5 @@
 # sprig
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dorranh/sprig/ci.yml)
 
 Sprig is a tool for managing the data that goes into your projects in a
 _declarative_ way. It is primarily aimed at data analysis and machine learning
