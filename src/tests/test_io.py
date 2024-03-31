@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 
 from sprig.app.io import read_rows
-from sprig.model import *
+from sprig.model import DatabaseStorageConfig, Format, RowConfig, Sprig, Structure
 
 TEST_TABLE = "test_data"
 
