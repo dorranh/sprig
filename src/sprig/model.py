@@ -18,7 +18,7 @@ class Structure(Enum):
 
 class Format(Enum):
     CSV = "csv"
-
+    SQL = "sql"
 
 class StorageConfig(BaseModel):
     pass
@@ -27,6 +27,9 @@ class StorageConfig(BaseModel):
 class LocalStorageConfig(StorageConfig):
     path: str
 
+class DatabaseStorageConfig(StorageConfig):
+    connection_string: str # FIXME: Need to handle secrets, etc properly.
+    query: str
 
 class RowConfig(BaseModel):
     start: int
@@ -36,8 +39,7 @@ class RowConfig(BaseModel):
 class Sprig(BaseModel):
     id: UUID4
     name: str
-    # FIXME: Using single concrete subtype rather than a union or parent here
-    storage: LocalStorageConfig
+    storage: LocalStorageConfig | DatabaseStorageConfig
     structure: Structure
     format: Format
     read_config: RowConfig  # TODO: Add other config here

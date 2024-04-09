@@ -1,4 +1,4 @@
-default: install lint
+default: install lint test
 
 install: install-client install-src
 
@@ -18,3 +18,7 @@ lint-src:
 
 lint: lint-client lint-src
 
+test-src:
+  cd src && poetry run pytest
+
+test: test-src

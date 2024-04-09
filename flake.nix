@@ -16,7 +16,12 @@
           pkgs.python3
           pkgs.poetry
           pkgs.alejandra
+          pkgs.nodejs_21
         ];
+
+        shellHook = ''
+          export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib";
+        '';
       };
     });
 }
