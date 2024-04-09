@@ -17,6 +17,10 @@
           pkgs.poetry
           pkgs.alejandra
         ];
+
+        shellHook = ''
+          export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH";
+        '';
       };
     });
 }
