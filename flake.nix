@@ -16,6 +16,7 @@
           pkgs.python3
           pkgs.poetry
           pkgs.alejandra
+          pkgs.nodejs_21
         ];
 
         shellHook = ''
