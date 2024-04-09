@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, BinaryIO
 from uuid import uuid4
 
@@ -41,7 +42,11 @@ def tracked(func):
     def wrapper(*args, **kwargs):
         # FIXME: do something less silly here
         sprig: Sprig = args[0]
-        with open(f"./sprigs/{sprig.name}.sprig", "w") as f:
+        # FIXME: This needs to be configurable
+        sprig_dir = Path("sprigs")
+        sprig_dir.mkdir(exist_ok=True)
+        sprig_path = sprig_dir.joinpath(f"{sprig.name}.sprig")
+        with sprig_path.open("w") as f:
             print(yaml.dump(sprig.model_dump(mode="json")), file=f)
         return func(*args, **kwargs)
 
