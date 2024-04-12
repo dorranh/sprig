@@ -1,10 +1,8 @@
-format: csv
-id: 19d5060a-62e2-45d7-b4a9-8c77abf25fa8
-name: my-new-sprig
-read_config:
+config:
+  format: {}
   start: 0
   stop: null
+name: my-new-sprig
 storage:
   path: example-data/my-updated-data.csv
-structure: rows
 

@@ -5,7 +5,7 @@ from typing import Protocol
 
 from pyarrow import ipc
 
-from sprig.model import LocalStorageConfig, Rows, Sprig, StorageConfig
+from sprig.model import LocalStorageConfig, Sprig, Table
 
 
 class Basket(Protocol):
@@ -22,7 +22,7 @@ class Basket(Protocol):
         """Get a sprig by name"""
         ...
 
-    def read_sprig(self, name: str) -> Rows:
+    def read_sprig(self, name: str) -> Table:
         # FIXME: We currently return a Rows from this, but likely we want to
         # return a Rows or a Columns or a Blob. The interchange format I'm using
         # is just an Arrow table, which will not work the the Blob case. We'll
@@ -30,9 +30,7 @@ class Basket(Protocol):
         """Reads a sprig"""
         ...
 
-    def create_from_rows(
-        self, name: str, rows: Rows, storage_config: StorageConfig
-    ) -> Sprig:
+    def create_from_rows(self, name: str, rows: Table, storage_config: LocalStorageConfig) -> Sprig:
         ...
 
 
@@ -51,37 +49,28 @@ class LocalBasket(Basket):
         return names
 
     def get_sprig(self, name: str) -> Sprig:
-        stream = subprocess.Popen(
-            f"sprig get --name {name}", shell=True, stdout=subprocess.PIPE
-        )
+        stream = subprocess.Popen(f"sprig get --name {name}", shell=True, stdout=subprocess.PIPE)
         stream.wait(timeout=10)
         sprig = Sprig.model_validate_json(stream.stdout.read())  # type: ignore
         return sprig
 
-    def read_sprig(self, name: str) -> Rows:
+    def read_sprig(self, name: str) -> Table:
         # Call the CLI and get the arrow ipc stream it outputs
-        stream = subprocess.Popen(
-            f"sprig read --name {name}", shell=True, stdout=subprocess.PIPE
-        )
+        stream = subprocess.Popen(f"sprig read --name {name}", shell=True, stdout=subprocess.PIPE)
         stream.wait(timeout=60)
         reader = ipc.open_stream(stream.stdout)
         data = reader.read_all()
-        return Rows(data)
+        return Table(data)
 
-    def create_from_rows(
-        self, name: str, rows: Rows, storage_config: StorageConfig
-    ) -> Sprig:
+    def create_from_rows(self, name: str, rows: Table, storage_config: LocalStorageConfig) -> Sprig:
         # Prepare payload to pass to back-end
         buffer = BytesIO()
         writer = ipc.new_stream(buffer, rows._table.schema)
         writer.write(rows._table)
         buffer.seek(0)
 
-        match storage_config:
-            case LocalStorageConfig() as local:
-                cmd = (f"sprig create --name {name} --path {local.path}",)
-            case _:
-                raise RuntimeError("Unsupported storage config!")
+        # TODO: support other structures
+        cmd = (f"sprig create --name {name} --path {storage_config.path} --structure table",)
 
         result = subprocess.run(
             cmd,

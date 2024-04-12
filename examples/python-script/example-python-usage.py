@@ -1,24 +1,7 @@
-
 from pprint import pprint
 
 from sprig.client.basket import LocalBasket
 from sprig.model import *
-
-# # In this example we CREATE a sprig
-#     sprig = Sprig(
-#         id=uuid4(),
-#         name="demo-sprig",
-#         structure=Structure.ROWS,
-#         format=Format.CSV,
-#         read_config=RowConfig(start=2, stop=None),
-#         storage=LocalStorageConfig(path="./example-data/my-dataset.csv"),
-#     )
-#     print(f"Here is your sprig: {sprig}")
-#     print(read(sprig).to_pandas())
-#
-
-# FIXME [Dorran]: Currently left off here during refactor. Need to clean up
-# Basket API and use it in the examples below.
 
 
 def main():
@@ -61,7 +44,7 @@ def my_analysis(basket: LocalBasket):
     # specified storage.
     new_sprig = basket.create_from_rows(
         "my-new-sprig",
-        Rows.from_pandas(df),
+        Table.from_pandas(df),
         LocalStorageConfig(path="example-data/my-updated-data.csv"),
     )
 

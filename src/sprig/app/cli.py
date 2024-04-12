@@ -7,14 +7,14 @@ import pyarrow as pa
 from sprig.app import io
 from sprig.app.repo import LocalRepo
 from sprig.app.storage import LocalStorage
-from sprig.model import LocalStorageConfig, Structure, Table
+from sprig.model import LocalStorageConfig, Table
 
 
 @click.group()
-@click.option("--dir", "directory", default="sprigs", type=click.Path)
+@click.option("--dir", "directory", default="sprigs", type=click.Path())
 @click.pass_context
 def cli(ctx, directory: str):
-    ctx.repo = LocalRepo(Path(directory))
+    ctx.obj = LocalRepo(Path(directory))
 
 
 @cli.command()
@@ -78,7 +78,7 @@ def create(repo: LocalRepo, name: str, path: str, structure: str = "table"):
     table = reader.read_all()
 
     match structure:
-        case Structure.TABLE:
+        case "table":
             sprig = io.sprig_from_table(
                 sprig_dir=repo.path,
                 name=name,

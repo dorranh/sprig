@@ -7,6 +7,7 @@ from typing import Any, BinaryIO, Callable, ParamSpec, TypeVar, cast
 
 import pyarrow as pa
 import yaml
+from pyarrow import csv
 from sqlalchemy import CursorResult
 
 from sprig.app.storage import LocalStorage, SQLStorage
@@ -85,7 +86,7 @@ def read_table(sprig: Sprig, start: int = 0, stop: int | None = None) -> Table:
                 raise Exception("Only local storage config is currently supported for CSV files.")
             stream = LocalStorage(config=sprig.storage).open()
             # FIXME: This loads the whole thing into memory
-            table: pa.Table = pa.csv.read_csv(stream)
+            table: pa.Table = csv.read_csv(stream)
             return Table(table.slice(start, stop))
         case SQL():
             if not isinstance(sprig.storage, DatabaseStorageConfig):
@@ -103,7 +104,7 @@ def read_table(sprig: Sprig, start: int = 0, stop: int | None = None) -> Table:
 def _write_table(table: Table, format: Format, stream: BinaryIO) -> None:
     match format:
         case CSV():
-            pa.csv.write_csv(table._table, stream)
+            csv.write_csv(table._table, stream)
         case _:
             raise RuntimeError(f"Unsupported format: {format}")
 

@@ -65,4 +65,4 @@ class Table:
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> "Table":
-        return cls(Table.from_pandas(df))
+        return cls(pa.Table.from_pandas(df))
