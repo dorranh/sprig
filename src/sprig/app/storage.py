@@ -1,3 +1,4 @@
+from abc import ABC
 from contextlib import contextmanager
 from typing import BinaryIO
 
@@ -7,25 +8,29 @@ from sqlalchemy import create_engine, text
 from sprig.model import DatabaseStorageConfig, LocalStorageConfig
 
 
-class Storage(BaseModel):
+class ReadOnly(ABC, BaseModel):
+    """Abstract base class for storage types which are read only"""
+
+    pass
+
+
+class ReadWrite(ABC, BaseModel):
+    """Abstract base class for storage types which may be both read from and written to"""
+
+    pass
+
+
+class LocalStorage(ReadWrite):
+    config: LocalStorageConfig
+
     def open(self) -> BinaryIO:
-        ...
+        return open(self.config.path, "rb")
 
     def open_for_write(self) -> BinaryIO:
-        ...
+        return open(self.config.path, "wb")
 
 
-class LocalStorage(Storage):
-    info: LocalStorageConfig
-
-    def open(self) -> BinaryIO:
-        return open(self.info.path, "rb")
-
-    def open_for_write(self) -> BinaryIO:
-        return open(self.info.path, "wb")
-
-
-class SQLStorage(BaseModel):
+class SQLStorage(ReadOnly):
     config: DatabaseStorageConfig
 
     @contextmanager

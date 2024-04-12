@@ -1,46 +1,44 @@
 import json
+from pathlib import Path
 
 import click
-from pyarrow import ipc
+import pyarrow as pa
 
 from sprig.app import io
 from sprig.app.repo import LocalRepo
 from sprig.app.storage import LocalStorage
-from sprig.model import LocalStorageConfig, Rows
+from sprig.model import LocalStorageConfig, Structure, Table
 
 
 @click.group()
-def cli():
-    pass
+@click.option("--dir", "directory", default="sprigs", type=click.Path)
+@click.pass_context
+def cli(ctx, directory: str):
+    ctx.repo = LocalRepo(Path(directory))
 
 
 @cli.command()
 @click.option("--name", required=True)
-def read(name: str):
-    """Mock-up of the sprig executable
-
-    Returns a stream (to stdout) containing the sprig's contents
-    """
-    # TODO: Make this configurable
-    repo = LocalRepo()
-
+@click.pass_obj
+def read(repo: LocalRepo, name: str):
+    """Returns a stream (to stdout) containing the sprig's contents"""
     # TODO: Fail gracefully here
     sprig = repo.get_sprig(name)
 
-    # TODO: Might want to be doing a streaming read instead
+    # TODO: Might want to be doing a streaming read instead of loading everything to a buffer
+    # then passing it to stdout as a separate step
     data = io.read(sprig)
 
     stdout = click.get_binary_stream("stdout")
-    writer = ipc.new_stream(stdout, data._table.schema)
-    writer.write(data._table)  # TODO: Do we want to use write_table() instead?
+    writer = pa.ipc.new_stream(stdout, data._table.schema)
+    writer.write(data._table)
     writer.close()
 
 
 @cli.command()
-def list():
+@click.pass_obj
+def list(repo: LocalRepo):
     """List available sprigs"""
-    # TODO: Make this configurable
-    repo = LocalRepo()
     stdout = click.get_binary_stream("stdout")
     # FIXME: Use an actual schema here
     stdout.write(json.dumps({"sprigs": repo.list_sprigs()}).encode())
@@ -48,7 +46,8 @@ def list():
 
 @cli.command()
 @click.option("--name", required=True)
-def get(name: str):
+@click.pass_obj
+def get(repo: LocalRepo, name: str):
     """Get a sprig by name"""
     # TODO: Make this configurable
     repo = LocalRepo()
@@ -62,21 +61,31 @@ def get(name: str):
 @cli.command()
 @click.option("--name", required=True)
 @click.option("--path", required=True)
-# FIXME: This currently only supports local storage. Need to accept a wider
-# range of args.
-# FIXME: Add arg for format, etc.
-def create(name: str, path: str):
-    """Constructs a new sprig from the data passed via stdin"""
+@click.option("--structure")
+@click.pass_obj
+def create(repo: LocalRepo, name: str, path: str, structure: str = "table"):
+    """
+    Constructs a new sprig from the data passed via stdin, returning the new sprig via
+    STDOUT.
+
+    Currently this only supports writing to local storage at the provided --path.
+    """
+
     stdin = click.get_binary_stream("stdin")
     stdout = click.get_binary_stream("stdout")
 
-    reader = ipc.open_stream(stdin)
+    reader = pa.ipc.open_stream(stdin)
     table = reader.read_all()
 
-    sprig = io.sprig_from_rows(
-        name=name,
-        rows=Rows(table),
-        storage=LocalStorage(info=LocalStorageConfig(path=path)),
-    )
+    match structure:
+        case Structure.TABLE:
+            sprig = io.sprig_from_table(
+                sprig_dir=repo.path,
+                name=name,
+                rows=Table(table),
+                storage=LocalStorage(config=LocalStorageConfig(path=path)),
+            )
+        case s:
+            raise RuntimeError(f"The provided structure {s} is not yet supported for creating sprigs.")
 
     stdout.write(sprig.model_dump_json().encode())

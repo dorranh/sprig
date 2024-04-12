@@ -1,57 +1,68 @@
 """
 Core types, primarily for use in the client.
 """
+from abc import ABC
 from dataclasses import dataclass
 from enum import Enum
+from typing import ClassVar, TypeAlias, Union
 
 import pandas as pd
-from pyarrow import Table
+import pyarrow as pa
 from pydantic import BaseModel
-from pydantic.types import UUID4
 
 
 class Structure(Enum):
-    ROWS = "rows"
-    COLUMNS = "columns"
+    TABLE = "table"
     BLOB = "blob"
 
 
-class Format(Enum):
-    CSV = "csv"
-    SQL = "sql"
+class Format(ABC, BaseModel):
+    structure: ClassVar[Structure]
 
-class StorageConfig(BaseModel):
+
+class CSV(Format):
+    structure = Structure.TABLE
+
+
+class SQL(Format):
+    structure = Structure.TABLE
+
+
+TableFormat: TypeAlias = Union[CSV, SQL]
+
+
+class LocalStorageConfig(BaseModel):
+    path: str
+
+
+class DatabaseStorageConfig(BaseModel):
+    connection_string: str  # FIXME: Need to handle secrets, etc properly.
+    query: str
+
+
+class DataConfig(BaseModel):
     pass
 
 
-class LocalStorageConfig(StorageConfig):
-    path: str
-
-class DatabaseStorageConfig(StorageConfig):
-    connection_string: str # FIXME: Need to handle secrets, etc properly.
-    query: str
-
-class RowConfig(BaseModel):
+class TableConfig(DataConfig):
+    format: CSV | SQL
     start: int
     stop: int | None
 
 
 class Sprig(BaseModel):
-    id: UUID4
     name: str
     storage: LocalStorageConfig | DatabaseStorageConfig
-    structure: Structure
-    format: Format
-    read_config: RowConfig  # TODO: Add other config here
+    config: TableConfig
 
 
 @dataclass
-class Rows:
-    _table: Table  # type: ignore
+class Table:
+    _table: pa.Table  # type: ignore
 
     def to_pandas(self) -> pd.DataFrame:
         return self._table.to_pandas()
 
     @classmethod
-    def from_pandas(cls, df: pd.DataFrame) -> "Rows":
+    def from_pandas(cls, df: pd.DataFrame) -> "Table":
         return cls(Table.from_pandas(df))

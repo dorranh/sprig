@@ -1,12 +1,16 @@
 import os
 import sqlite3
 import tempfile
-from uuid import uuid4
 
 import pytest
 
-from sprig.app.io import read_rows
-from sprig.model import DatabaseStorageConfig, Format, RowConfig, Sprig, Structure
+from sprig.app.io import read_table
+from sprig.model import (
+    SQL,
+    DatabaseStorageConfig,
+    Sprig,
+    TableConfig,
+)
 
 TEST_TABLE = "test_data"
 
@@ -40,13 +44,10 @@ def sqlite_db():
 def test_read_sql_rows(sqlite_db: str):
     print(sqlite_db)
     sprig = Sprig(
-        id=uuid4(),
         name="test",
         storage=DatabaseStorageConfig(connection_string=f"sqlite:///{sqlite_db}", query=f"SELECT * FROM {TEST_TABLE}"),
-        structure=Structure.ROWS,
-        format=Format.SQL,
-        read_config=RowConfig(start=0, stop=None),
+        config=TableConfig(start=0, stop=None, format=SQL()),
     )
-    rows = read_rows(sprig)
+    rows = read_table(sprig)
     assert len(rows.to_pandas()) == 2
     assert rows.to_pandas().columns.values.tolist() == ["columnA", "columnB"]
