@@ -1,0 +1,8 @@
+config:
+  format: {}
+  start: 0
+  stop: null
+name: my-new-sprig
+storage:
+  path: example-data/my-updated-data.csv
+

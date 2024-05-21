@@ -1,0 +1,9 @@
+config:
+  format: {}
+  start: 2
+  stop: null
+name: demo-sprig
+storage:
+  storage_type: local
+  path: ./example-data/my-dataset.csv
+
