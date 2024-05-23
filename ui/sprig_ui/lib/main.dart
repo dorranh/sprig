@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:sprig_ui/repo.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const SprigUI());
 }
 
-final List<String> entries = <String>['A', 'B', 'C'];
-final List<int> colorCodes = <int>[600, 500, 100];
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SprigUI extends StatelessWidget {
+  const SprigUI({super.key});
 
   // This widget is the root of your application.
   @override
@@ -35,82 +32,97 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Sprig'),
+      home: const BasketUI(title: 'Sprig'),
     );
   }
 }
 
-// Widget build(BuildContext context) {
-//   return ListView.builder(
-//       padding: const EdgeInsets.all(8),
-//       itemCount: entries.length,
-//       itemBuilder: (BuildContext context, int index) {
-//         return Container(
-//           height: 50,
-//           color: Colors.amber[colorCodes[index]],
-//           child: Center(child: Text('Entry ${entries[index]}')),
-//         );
-//       });
-// }
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+/// The main UI component for managing Sprig baskets.
+class BasketUI extends StatefulWidget {
+  const BasketUI({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<BasketUI> createState() => _BasketUIState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  Sprigs? _sprigs;
-
-  Repo repo =
-      ExternalRepo("/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-      // FIXME: Just playing around
-      _sprigs = repo.list();
-    });
-  }
+class _BasketUIState extends State<BasketUI> {
+  // FIXME: This default value is just for debugging
+  Basket repo = LocalBasket(
+      sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final asyncSprigWidget = FutureBuilder<Sprigs>(
+      future: repo.list(),
+      builder: (BuildContext context, AsyncSnapshot<Sprigs> snapshot) {
+        List<Widget> children;
+        if (snapshot.hasData) {
+          children = <Widget>[
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.green,
+              size: 60,
+            ),
+            Flexible(
+                child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: snapshot.data?.sprigs?.length ?? 0,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        height: 50,
+                        color: Colors.lightBlue,
+                        child: Center(
+                            child:
+                                Text('${snapshot.data?.sprigs?[index].name}')),
+                      );
+                    }))
+          ];
+        } else if (snapshot.hasError) {
+          children = <Widget>[
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 60,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          ];
+        } else {
+          children = const <Widget>[
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: Text('Awaiting result...'),
+            ),
+          ];
+        }
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: children,
+          ),
+        );
+      },
+    );
 
-    final listView = ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: _sprigs?.sprigs?.length ?? 0,
-        itemBuilder: (BuildContext context, int index) {
-          return Container(
-            height: 50,
-            color: Colors.lightBlue,
-            child: Center(child: Text('Entry ${_sprigs?.sprigs?[index]}')),
-          );
-        });
+    // final sprigListView = ListView.builder(
+    //     padding: const EdgeInsets.all(8),
+    //     itemCount: _sprigs?.sprigs?.length ?? 0,
+    //     itemBuilder: (BuildContext context, int index) {
+    //       return Container(
+    //         height: 50,
+    //         color: Colors.lightBlue,
+    //         child: Center(child: Text('Entry ${_sprigs?.sprigs?[index]}')),
+    //       );
+    //     });
 
     return Scaffold(
       appBar: AppBar(
@@ -122,12 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(child: listView),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      body: Center(child: asyncSprigWidget),
     );
   }
 }

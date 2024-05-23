@@ -1,52 +1,48 @@
 import 'dart:io';
 import 'dart:convert';
 
+class Sprig {
+  // The name of the sprig
+  String? name;
+  // FIXME: Add additional fields from sprig schema
+
+  Sprig(this.name);
+}
+
 class Sprigs {
-  List<String>? sprigs;
+  List<Sprig>? sprigs;
 
   Sprigs(this.sprigs);
 }
 
-abstract class Repo {
-  Sprigs? list();
+/// Base class for Sprig baskets. A Basket is a repository containing sprigs and related methods.
+abstract class Basket {
+  /// List all the sprigs in the basket.
+  Future<Sprigs>? list();
 }
 
-class ExternalRepo implements Repo {
+/// A basket hosted on the local filesystem.
+class LocalBasket implements Basket {
+  /// The path to the sprig binary.
+  String sprigBinary;
+
+  /// The path to the basket's directory.
   String path;
 
-  ExternalRepo(this.path);
+  LocalBasket({this.sprigBinary = "sprig", this.path = "."});
 
   @override
-  Sprigs? list() {
-    // FIXME: Implement this
-    try {
-      var result = Process.runSync(
-        path,
-        ["list"],
-        runInShell: false,
-      );
-      if (result.exitCode != 0) {
+  Future<Sprigs>? list() {
+    var result = Process.run(sprigBinary, ["list"],
+        runInShell: false, workingDirectory: path);
+
+    return result.then((r) {
+      if (r.exitCode != 0) {
         throw Exception(["EXPLODE. The exit code was nonzero."]);
       }
-      final output = jsonDecode(result.stdout);
+      final output = jsonDecode(r.stdout);
       List<String> sprigNames = output['sprigs'].cast<String>();
-      return Sprigs(sprigNames);
-    } on ProcessException catch (e) {
-      print("HEY THAT DID NOT WORK");
-      print(e.toString());
-      return null;
-    }
+      return Sprigs(sprigNames.map((name) => Sprig(name)).toList());
+    });
   }
 }
-
-
-//  Process.run('sprig', ["list"]).then((ProcessResult result) {
-//     if (result.exitCode == 0) {
-//       print('Command executed successfully');
-//       print('Output: ${result.stdout}');
-//     } else {
-//       print('Failed to execute command');
-//       print('Error: ${result.stderr}');
-//     }
-//   });
-// ProcessException needs to be caught
