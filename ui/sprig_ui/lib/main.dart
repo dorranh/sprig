@@ -52,6 +52,9 @@ class _BasketUIState extends State<BasketUI> {
   Basket repo = LocalBasket(
       sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
 
+  /// The currently selected sprig
+  Sprig? selectedSprig;
+
   @override
   Widget build(BuildContext context) {
     final asyncSprigWidget = FutureBuilder<Sprigs>(
@@ -65,18 +68,27 @@ class _BasketUIState extends State<BasketUI> {
               color: Colors.green,
               size: 60,
             ),
+            Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('Selected: ${selectedSprig?.name}')),
             Flexible(
                 child: ListView.builder(
                     padding: const EdgeInsets.all(8),
                     itemCount: snapshot.data?.sprigs?.length ?? 0,
                     itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                        height: 50,
-                        color: Colors.lightBlue,
-                        child: Center(
-                            child:
-                                Text('${snapshot.data?.sprigs?[index].name}')),
-                      );
+                      return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedSprig = snapshot.data?.sprigs?[index];
+                            });
+                          },
+                          child: Container(
+                            height: 50,
+                            color: Colors.lightBlue,
+                            child: Center(
+                                child: Text(
+                                    '${snapshot.data?.sprigs?[index].name}')),
+                          ));
                     }))
           ];
         } else if (snapshot.hasError) {
