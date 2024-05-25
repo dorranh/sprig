@@ -48,6 +48,42 @@ class SprigUI extends StatelessWidget {
   }
 }
 
+class SprigDetailsCard extends StatelessWidget {
+  const SprigDetailsCard({super.key, required this.sprigDetails});
+
+  final SprigDetails sprigDetails;
+
+  // ListTile(
+  //   leading: const Icon(Icons.data_object_outlined),
+  //   title: Text('${sprigDetails.name}'),
+  //   subtitle: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: <Widget>[
+  //         Text('Structure: ${sprigDetails.structure}'),
+  //         Text('Format: ${sprigDetails.format}'),
+  //         Text('ID: ${sprigDetails.id}')
+  //       ]),
+  // ),
+
+//
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+        child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('${sprigDetails.name}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Structure: ${sprigDetails.structure}'),
+                  Text('Format: ${sprigDetails.format}'),
+                  Text('ID: ${sprigDetails.id}')
+                ])));
+  }
+}
+
 class SprigDetailsPanel extends StatefulWidget {
   const SprigDetailsPanel({super.key, required this.sprigName});
 
@@ -58,9 +94,52 @@ class SprigDetailsPanel extends StatefulWidget {
 }
 
 class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
+  // FIXME: This default value is just for debugging
+  Basket repo = LocalBasket(
+      sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
+
   @override
   Widget build(BuildContext context) {
-    return Text('Sprig: ${widget.sprigName.name}');
+    final asyncSprigWidget = FutureBuilder<SprigDetails>(
+      future: repo.getDetails(widget.sprigName),
+      builder: (BuildContext context, AsyncSnapshot<SprigDetails> snapshot) {
+        List<Widget> children;
+        if (snapshot.hasData) {
+          children = <Widget>[SprigDetailsCard(sprigDetails: snapshot.data!)];
+        } else if (snapshot.hasError) {
+          children = <Widget>[
+            const Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 60,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          ];
+        } else {
+          children = const <Widget>[
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: Text('Awaiting result...'),
+            ),
+          ];
+        }
+        final leftPanel = Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: children,
+        );
+
+        return Center(child: leftPanel);
+      },
+    );
+    return asyncSprigWidget;
   }
 }
 
@@ -181,7 +260,7 @@ class _BasketUIState extends State<BasketUI> {
           ),
         ],
         children: [
-          Expanded(child: SprigList(onSprigSelected: callback)),
+          SprigList(onSprigSelected: callback),
           SprigDetailsPanel(
             sprigName: selectedSprig!,
           )
