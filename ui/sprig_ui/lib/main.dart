@@ -179,14 +179,12 @@ class _SprigListState extends State<SprigList> {
                             widget.onSprigSelected
                                 ?.call(snapshot.data?.sprigs?[index]);
                           },
-                          child: Container(
-                            height: 50,
-                            color: Colors.lightBlue,
-                            child: Center(
-                                child: Text(
-                                    '${snapshot.data?.sprigs?[index].name}')),
+                          child: ListTile(
+                            leading: const Icon(Icons.data_object_outlined),
+                            title:
+                                Text('${snapshot.data?.sprigs?[index].name}'),
                           ));
-                    }))
+                    })),
           ];
         } else if (snapshot.hasError) {
           children = <Widget>[
