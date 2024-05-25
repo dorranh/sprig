@@ -1,0 +1,10 @@
+config:
+  format: {}
+  start: 0
+  stop: null
+name: test
+storage:
+  connection_string: sqlite:////Users/dorran/dev/sprig/src/tmpigk5suj8/test.sqlite
+  query: SELECT * FROM test_data
+  storage_type: database
+
