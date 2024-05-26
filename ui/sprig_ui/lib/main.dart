@@ -104,7 +104,8 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
       future: repo.getDetails(widget.sprigName),
       builder: (BuildContext context, AsyncSnapshot<SprigDetails> snapshot) {
         List<Widget> children;
-        if (snapshot.hasData) {
+        if (snapshot.hasData &&
+            !(snapshot.connectionState == ConnectionState.waiting)) {
           children = <Widget>[SprigDetailsCard(sprigDetails: snapshot.data!)];
         } else if (snapshot.hasError) {
           children = <Widget>[
@@ -156,6 +157,8 @@ class _SprigListState extends State<SprigList> {
   Basket repo = LocalBasket(
       sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
 
+  int? _selectedSprigIndex;
+
   @override
   Widget build(BuildContext context) {
     final asyncSprigWidget = FutureBuilder<Sprigs>(
@@ -164,26 +167,35 @@ class _SprigListState extends State<SprigList> {
         List<Widget> children;
         if (snapshot.hasData) {
           children = <Widget>[
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.green,
-              size: 60,
+            Text(
+              'Sprigs:',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.start,
             ),
             Flexible(
                 child: ListView.builder(
                     padding: const EdgeInsets.all(8),
                     itemCount: snapshot.data?.sprigs?.length ?? 0,
                     itemBuilder: (BuildContext context, int index) {
-                      return GestureDetector(
-                          onTap: () {
-                            widget.onSprigSelected
-                                ?.call(snapshot.data?.sprigs?[index]);
-                          },
-                          child: ListTile(
-                            leading: const Icon(Icons.data_object_outlined),
-                            title:
-                                Text('${snapshot.data?.sprigs?[index].name}'),
-                          ));
+                      return ListTile(
+                        onTap: () {
+                          // Update the state of this widget
+                          setState(() {
+                            _selectedSprigIndex = index;
+                          });
+                          // Fire off any provided callbacks as well
+                          widget.onSprigSelected
+                              ?.call(snapshot.data?.sprigs?[index]);
+                        },
+                        tileColor: _selectedSprigIndex == index
+                            ? Color.fromARGB(255, 148, 243, 154)
+                            : null,
+                        shape: RoundedRectangleBorder(
+                            side: BorderSide(color: Colors.grey, width: 0.5),
+                            borderRadius: BorderRadius.circular(4)),
+                        leading: const Icon(Icons.data_object_outlined),
+                        title: Text('${snapshot.data?.sprigs?[index].name}'),
+                      );
                     })),
           ];
         } else if (snapshot.hasError) {
