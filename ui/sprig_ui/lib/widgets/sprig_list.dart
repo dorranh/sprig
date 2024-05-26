@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sprig_ui/repo.dart';
+import 'package:grouped_list/grouped_list.dart';
 
 /// The main UI component for managing Sprig baskets.
 class SprigList extends StatefulWidget {
@@ -30,10 +31,25 @@ class _SprigListState extends State<SprigList> {
               textAlign: TextAlign.start,
             ),
             Flexible(
-                child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: snapshot.data?.sprigs?.length ?? 0,
-                    itemBuilder: (BuildContext context, int index) {
+                child: GroupedListView<dynamic, String>(
+                    elements: snapshot.data?.sprigs ?? [],
+                    groupBy: (element) =>
+                        ".", // FIXME: Use the actual basket element['group'],
+                    // groupComparator: (value1, value2) => value2.compareTo(value1),
+                    // itemComparator: (item1, item2) =>
+                    //     item1['name'].compareTo(item2['name']),
+                    order: GroupedListOrder.DESC,
+                    useStickyGroupSeparators: true,
+                    groupSeparatorBuilder: (String value) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "Basket: $value",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    indexedItemBuilder: (c, element, index) {
                       return ListTile(
                         onTap: () {
                           // Update the state of this widget
@@ -53,7 +69,7 @@ class _SprigListState extends State<SprigList> {
                         leading: const Icon(Icons.data_object_outlined),
                         title: Text('${snapshot.data?.sprigs?[index].name}'),
                       );
-                    })),
+                    }))
           ];
         } else if (snapshot.hasError) {
           children = <Widget>[
