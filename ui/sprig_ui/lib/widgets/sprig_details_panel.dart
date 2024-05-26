@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:sprig_ui/repo.dart';
 import 'package:sprig_ui/widgets/sprig_details_card.dart';
+import 'package:sprig_ui/widgets/sprig_usage.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
 
 class SprigDetailsPanel extends StatefulWidget {
-  const SprigDetailsPanel({super.key, required this.sprigName});
+  final Map<String, Highlighter> languageHighlighters;
+
+  const SprigDetailsPanel(
+      {super.key, required this.sprigName, required this.languageHighlighters});
 
   final Sprig sprigName;
 
@@ -24,7 +29,13 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
         List<Widget> children;
         if (snapshot.hasData &&
             !(snapshot.connectionState == ConnectionState.waiting)) {
-          children = <Widget>[SprigDetailsCard(sprigDetails: snapshot.data!)];
+          children = <Widget>[
+            SprigDetailsCard(sprigDetails: snapshot.data!),
+            SprigUsage(
+                sprigName: snapshot.data?.name,
+                basketInfo: "my-basket-fixme",
+                languageHighlighters: widget.languageHighlighters)
+          ];
         } else if (snapshot.hasError) {
           children = <Widget>[
             const Icon(
