@@ -1,6 +1,12 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sprig_ui/repo.dart';
 import 'package:grouped_list/grouped_list.dart';
+import 'package:sprig_ui/utils/settings.dart';
+
+/// Local type alias to help with type annotations below. Repesents a Sprig and the basket it resides in.
+typedef BasketSprig = (LocalBasket, Sprig);
 
 /// The main UI component for managing Sprig baskets.
 class SprigList extends StatefulWidget {
@@ -10,18 +16,47 @@ class SprigList extends StatefulWidget {
   State<SprigList> createState() => _SprigListState();
 }
 
-class _SprigListState extends State<SprigList> {
-  // FIXME: This default value is just for debugging
-  Basket repo = LocalBasket(
-      sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
+/// Helper for querying all configured repos for the sprigs they contain.
+Future<List<BasketSprig>>? listAll(
+    List<LocalBasket> repos, String sprigBinary) async {
+  var allSprigs = await Future.wait(repos.map((repo) => repo
+      .list()!
+      .then((sprigs) => sprigs.sprigs?.map((s) => (repo, s)).toList())));
+  final List<BasketSprig> flattenedResult = [];
+  for (var repoSprigs in allSprigs) {
+    if (repoSprigs != null) {
+      flattenedResult.addAll(repoSprigs);
+    }
+  }
+  return flattenedResult;
+}
 
+class _SprigListState extends State<SprigList> {
+  List<LocalBasket> repos = [];
   int? _selectedSprigIndex;
+
+  final sprigBinary = "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig";
+
+  @override
+  void initState() {
+    super.initState();
+    getBaskets()
+        .then((basketPaths) => basketPaths
+            .map((p) => LocalBasket(sprigBinary: sprigBinary, path: p))
+            .toList())
+        .then((baskets) {
+      setState(() {
+        repos = baskets;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final asyncSprigWidget = FutureBuilder<Sprigs>(
-      future: repo.list(),
-      builder: (BuildContext context, AsyncSnapshot<Sprigs> snapshot) {
+    final asyncSprigWidget = FutureBuilder<List<BasketSprig>>(
+      future: listAll(repos, sprigBinary),
+      builder:
+          (BuildContext context, AsyncSnapshot<List<BasketSprig>> snapshot) {
         List<Widget> children;
         if (snapshot.hasData) {
           children = <Widget>[
@@ -32,9 +67,8 @@ class _SprigListState extends State<SprigList> {
             ),
             Flexible(
                 child: GroupedListView<dynamic, String>(
-                    elements: snapshot.data?.sprigs ?? [],
-                    groupBy: (element) =>
-                        ".", // FIXME: Use the actual basket element['group'],
+                    elements: snapshot.data ?? [],
+                    groupBy: (element) => element.$1.path,
                     // groupComparator: (value1, value2) => value2.compareTo(value1),
                     // itemComparator: (item1, item2) =>
                     //     item1['name'].compareTo(item2['name']),
@@ -46,7 +80,7 @@ class _SprigListState extends State<SprigList> {
                             "Basket: $value",
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+                                fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ),
                     indexedItemBuilder: (c, element, index) {
@@ -58,7 +92,7 @@ class _SprigListState extends State<SprigList> {
                           });
                           // Fire off any provided callbacks as well
                           widget.onSprigSelected
-                              ?.call(snapshot.data?.sprigs?[index]);
+                              ?.call(snapshot.data?[index].$2);
                         },
                         tileColor: _selectedSprigIndex == index
                             ? Color.fromARGB(255, 148, 243, 154)
@@ -67,7 +101,7 @@ class _SprigListState extends State<SprigList> {
                             side: BorderSide(color: Colors.grey, width: 0.5),
                             borderRadius: BorderRadius.circular(4)),
                         leading: const Icon(Icons.data_object_outlined),
-                        title: Text('${snapshot.data?.sprigs?[index].name}'),
+                        title: Text('${snapshot.data?[index].$2.name}'),
                       );
                     }))
           ];
@@ -98,7 +132,33 @@ class _SprigListState extends State<SprigList> {
         }
         final leftPanel = Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: children,
+          children: children +
+              <Widget>[
+                ElevatedButton.icon(
+                  icon: Icon(Icons.shopping_basket),
+                  label: Text("Create Sprig"),
+                  onPressed: () async {
+                    // Wait until we get a user-provided directory
+                    String? selectedDirectory =
+                        await FilePicker.platform.getDirectoryPath();
+                    // If the user actually selected something, we can save it to our application
+                    // settings.
+                    if (selectedDirectory != null) {
+                      await getBaskets().then((baskets) {
+                        baskets.add(selectedDirectory);
+                        saveBaskets(baskets);
+                        // TODO: This could be cleaner
+                        setState(() {
+                          repos = baskets
+                              .map((b) => LocalBasket(
+                                  sprigBinary: sprigBinary, path: b))
+                              .toList();
+                        });
+                      });
+                    }
+                  },
+                )
+              ],
         );
 
         return Center(child: leftPanel);

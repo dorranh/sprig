@@ -37,6 +37,9 @@ dependencies:
   cupertino_icons: ^1.0.6
   syntax_highlight: ^0.4.0
   grouped_list: ^5.1.2
+  shared_preferences: ^2.2.3
+  file_picker: ^8.0.3
+  tuple: ^2.0.2
 
 dev_dependencies:
   flutter_test:
