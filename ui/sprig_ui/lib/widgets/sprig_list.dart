@@ -11,7 +11,7 @@ typedef BasketSprig = (LocalBasket, Sprig);
 /// The main UI component for managing Sprig baskets.
 class SprigList extends StatefulWidget {
   const SprigList({super.key, required this.onSprigSelected});
-  final Function(Sprig?)? onSprigSelected;
+  final Function(BasketSprig?)? onSprigSelected;
   @override
   State<SprigList> createState() => _SprigListState();
 }
@@ -60,13 +60,9 @@ class _SprigListState extends State<SprigList> {
         List<Widget> children;
         if (snapshot.hasData) {
           children = <Widget>[
-            Text(
-              'Sprigs:',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.start,
-            ),
             Flexible(
                 child: GroupedListView<dynamic, String>(
+                    reverse: false,
                     elements: snapshot.data ?? [],
                     groupBy: (element) => element.$1.path,
                     // groupComparator: (value1, value2) => value2.compareTo(value1),
@@ -76,12 +72,32 @@ class _SprigListState extends State<SprigList> {
                     useStickyGroupSeparators: true,
                     groupSeparatorBuilder: (String value) => Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            "Basket: $value",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
+                          child: Row(children: <Widget>[
+                            Text(
+                              "$value",
+                              textAlign: TextAlign.left,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: const TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                                onPressed: () {
+                                  // Remove the selected basket from the list
+                                  final newRepos = repos
+                                      .where((element) => element.path != value)
+                                      .toList();
+                                  saveBaskets(newRepos
+                                      .map((b) => b.path)
+                                      .toSet()
+                                      .toList());
+                                  setState(() {
+                                    repos = newRepos;
+                                  });
+                                },
+                                icon: Icon(Icons.close))
+                          ]),
                         ),
                     indexedItemBuilder: (c, element, index) {
                       return ListTile(
@@ -91,11 +107,10 @@ class _SprigListState extends State<SprigList> {
                             _selectedSprigIndex = index;
                           });
                           // Fire off any provided callbacks as well
-                          widget.onSprigSelected
-                              ?.call(snapshot.data?[index].$2);
+                          widget.onSprigSelected?.call(snapshot.data?[index]);
                         },
                         tileColor: _selectedSprigIndex == index
-                            ? Color.fromARGB(255, 148, 243, 154)
+                            ? Color.fromARGB(255, 177, 239, 182)
                             : null,
                         shape: RoundedRectangleBorder(
                             side: BorderSide(color: Colors.grey, width: 0.5),
@@ -136,7 +151,7 @@ class _SprigListState extends State<SprigList> {
               <Widget>[
                 ElevatedButton.icon(
                   icon: Icon(Icons.shopping_basket),
-                  label: Text("Create Sprig"),
+                  label: Text("Add Basket"),
                   onPressed: () async {
                     // Wait until we get a user-provided directory
                     String? selectedDirectory =
@@ -146,6 +161,8 @@ class _SprigListState extends State<SprigList> {
                     if (selectedDirectory != null) {
                       await getBaskets().then((baskets) {
                         baskets.add(selectedDirectory);
+                        // De-deduplicate our list
+                        baskets = baskets.toSet().toList();
                         saveBaskets(baskets);
                         // TODO: This could be cleaner
                         setState(() {

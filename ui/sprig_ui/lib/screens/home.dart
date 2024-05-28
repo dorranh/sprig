@@ -9,16 +9,21 @@ class SprigUI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var colorScheme =
+        ColorScheme.fromSeed(seedColor: const Color.fromRGBO(129, 199, 132, 1));
     return MaterialApp(
         title: 'Sprig',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+          colorScheme: colorScheme,
           useMaterial3: true,
         ),
         home: Scaffold(
           appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            title: const Text('Sprig'),
+            backgroundColor: colorScheme.inversePrimary,
+            title: Row(children: <Widget>[
+              Icon(Icons.data_exploration),
+              Text('Sprig'),
+            ]),
           ),
           body: BasketUI(languageHighlighters: languageHighlighters),
         ));

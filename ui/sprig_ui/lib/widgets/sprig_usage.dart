@@ -1,16 +1,24 @@
 // Create a stateless widget called `SprigUsage` that displays the usage of a Sprig.
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 
 // FIXME: The content of this sample is currently incorrect
 String pythonUsage(String? sprigName, String basketInfo) {
   return """
-from sprig import Sprig, Basket
+from sprig.client.basket import LocalBasket
 
-basket = Basket("foo")
+# Create a client for interacting with this basket
+basket = Basket("$basketInfo")
+
+# Get a reference to the sprig
 sprig = basket.get("$sprigName")
 
-print(sprig)
+# Now we can read its data to consume in our analysis code,
+# for example, as a pandas DataFrame:
+df = basket.read_sprig("$sprigName").to_pandas()
+
+print(df.head())
 """;
 }
 
@@ -45,10 +53,27 @@ class SprigUsage extends StatelessWidget {
     final highlighter = languageHighlighters[language]!;
     final codeSample = getCodeSample(language, sprigName, basketInfo);
     return Container(
-        height: 200,
         width: double.infinity,
         child: Card(
-            child: Container(
-                child: Text.rich(highlighter.highlight(codeSample)))));
+            child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Container(
+                    child: Stack(children: <Widget>[
+                  Text.rich(highlighter.highlight(codeSample)),
+                  // Your Floating Menu
+                  Positioned(
+                    right: 10.0,
+                    top: 10.0,
+                    child: FloatingActionButton(
+                      mini: true,
+                      onPressed: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: codeSample));
+                        // copied successfully
+                      },
+                      child: Icon(Icons.copy),
+                    ),
+                  ),
+                ])))));
   }
 }

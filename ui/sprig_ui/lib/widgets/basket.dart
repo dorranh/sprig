@@ -17,7 +17,7 @@ class BasketUI extends StatefulWidget {
 
 class _BasketUIState extends State<BasketUI> {
   /// The currently selected sprig
-  Sprig? selectedSprig;
+  (LocalBasket, Sprig)? selectedSprig;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +31,7 @@ class _BasketUIState extends State<BasketUI> {
       return Split(
         axis: Axis.horizontal,
         initialFractions: const [0.3, 0.7],
+        minSizes: [200, 200],
         splitters: [
           SizedBox(
             width: 2,
@@ -44,7 +45,8 @@ class _BasketUIState extends State<BasketUI> {
         children: [
           SprigList(onSprigSelected: callback),
           SprigDetailsPanel(
-              sprigName: selectedSprig!,
+              sprig: selectedSprig!.$2,
+              repo: selectedSprig!.$1,
               languageHighlighters: widget.languageHighlighters)
         ],
       );

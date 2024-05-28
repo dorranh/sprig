@@ -8,17 +8,19 @@ class SprigDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-        child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('${sprigDetails.name}',
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Structure: ${sprigDetails.structure}'),
-                  Text('Format: ${sprigDetails.format}'),
-                  Text('ID: ${sprigDetails.id}')
-                ])));
+    return Container(
+        width: double.infinity,
+        child: Card(
+            child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('${sprigDetails.name}',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Structure: ${sprigDetails.structure}'),
+                      Text('Format: ${sprigDetails.format}'),
+                      Text('ID: ${sprigDetails.id}')
+                    ]))));
   }
 }

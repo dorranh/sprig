@@ -8,23 +8,23 @@ class SprigDetailsPanel extends StatefulWidget {
   final Map<String, Highlighter> languageHighlighters;
 
   const SprigDetailsPanel(
-      {super.key, required this.sprigName, required this.languageHighlighters});
+      {super.key,
+      required this.sprig,
+      required this.repo,
+      required this.languageHighlighters});
 
-  final Sprig sprigName;
+  final Sprig sprig;
+  final LocalBasket repo;
 
   @override
   State<SprigDetailsPanel> createState() => _SprigDetailsPanelState();
 }
 
 class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
-  // FIXME: This default value is just for debugging
-  Basket repo = LocalBasket(
-      sprigBinary: "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig");
-
   @override
   Widget build(BuildContext context) {
     final asyncSprigWidget = FutureBuilder<SprigDetails>(
-      future: repo.getDetails(widget.sprigName),
+      future: widget.repo.getDetails(widget.sprig),
       builder: (BuildContext context, AsyncSnapshot<SprigDetails> snapshot) {
         List<Widget> children;
         if (snapshot.hasData &&
@@ -33,7 +33,7 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
             SprigDetailsCard(sprigDetails: snapshot.data!),
             SprigUsage(
                 sprigName: snapshot.data?.name,
-                basketInfo: "my-basket-fixme",
+                basketInfo: widget.repo.path,
                 languageHighlighters: widget.languageHighlighters)
           ];
         } else if (snapshot.hasError) {
@@ -63,7 +63,7 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
         }
         final leftPanel = Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: children,
+          children: children + [const Spacer()],
         );
 
         return Center(child: leftPanel);
