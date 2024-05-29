@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: Continuous Integration - Flutter UI
 
 on:
   pull_request:
@@ -10,7 +10,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -21,6 +20,7 @@ jobs:
           flutter-version: 3.19.5
       - name: Build MacOS
         if: runner.os == 'macOS'
+        working-directory: ui/sprig_ui
         run: flutter build macos
         # if: runner.os == 'Linux'
         # if: runner.os == 'Windows'
