@@ -34,7 +34,8 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
             SprigUsage(
                 sprigName: snapshot.data?.name,
                 basketInfo: widget.repo.path,
-                languageHighlighters: widget.languageHighlighters)
+                languageHighlighters: widget.languageHighlighters),
+            const Spacer(),
           ];
         } else if (snapshot.hasError) {
           children = <Widget>[
@@ -63,7 +64,7 @@ class _SprigDetailsPanelState extends State<SprigDetailsPanel> {
         }
         final leftPanel = Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: children + [const Spacer()],
+          children: children,
         );
 
         return Center(child: leftPanel);

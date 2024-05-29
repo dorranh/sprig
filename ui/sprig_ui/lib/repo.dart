@@ -3,8 +3,8 @@ import 'dart:convert';
 
 class SprigDetails {
   String id;
-  String structure;
-  String format;
+  String structure; // TODO: Make this an enum
+  String format; // TODO: Make this an enum
   String? name;
 
   SprigDetails(
