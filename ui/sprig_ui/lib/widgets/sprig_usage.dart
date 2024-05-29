@@ -57,23 +57,35 @@ class SprigUsage extends StatelessWidget {
         child: Card(
             child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Container(
-                    child: Stack(children: <Widget>[
-                  Text.rich(highlighter.highlight(codeSample)),
-                  // Your Floating Menu
-                  Positioned(
-                    right: 10.0,
-                    top: 10.0,
-                    child: FloatingActionButton(
-                      mini: true,
-                      onPressed: () async {
-                        await Clipboard.setData(
-                            ClipboardData(text: codeSample));
-                        // copied successfully
-                      },
-                      child: Icon(Icons.copy),
-                    ),
-                  ),
-                ])))));
+                child: Column(children: <Widget>[
+                  const Row(children: [
+                    Text('Example Python Usage:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
+                    Spacer()
+                  ]),
+                  Container(
+                      margin: const EdgeInsets.only(top: 10.0),
+                      color: Colors.white,
+                      child: Stack(children: <Widget>[
+                        Text.rich(highlighter.highlight(codeSample)),
+                        // Your Floating Menu
+                        Positioned(
+                          right: 10.0,
+                          top: 10.0,
+                          child: Tooltip(
+                              message: "Copy to clipboard",
+                              child: FloatingActionButton(
+                                mini: true,
+                                onPressed: () async {
+                                  await Clipboard.setData(
+                                      ClipboardData(text: codeSample));
+                                  // copied successfully
+                                },
+                                child: Icon(Icons.copy),
+                              )),
+                        ),
+                      ]))
+                ]))));
   }
 }

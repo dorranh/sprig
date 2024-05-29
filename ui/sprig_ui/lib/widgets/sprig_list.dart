@@ -82,21 +82,25 @@ class _SprigListState extends State<SprigList> {
                                   fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                             const Spacer(),
-                            IconButton(
-                                onPressed: () {
-                                  // Remove the selected basket from the list
-                                  final newRepos = repos
-                                      .where((element) => element.path != value)
-                                      .toList();
-                                  saveBaskets(newRepos
-                                      .map((b) => b.path)
-                                      .toSet()
-                                      .toList());
-                                  setState(() {
-                                    repos = newRepos;
-                                  });
-                                },
-                                icon: Icon(Icons.close))
+                            Tooltip(
+                                message:
+                                    "Remove this basket from the UI. Does not delete data from the basket.",
+                                child: IconButton(
+                                    onPressed: () {
+                                      // Remove the selected basket from the list
+                                      final newRepos = repos
+                                          .where((element) =>
+                                              element.path != value)
+                                          .toList();
+                                      saveBaskets(newRepos
+                                          .map((b) => b.path)
+                                          .toSet()
+                                          .toList());
+                                      setState(() {
+                                        repos = newRepos;
+                                      });
+                                    },
+                                    icon: Icon(Icons.close))),
                           ]),
                         ),
                     indexedItemBuilder: (c, element, index) {
@@ -110,12 +114,13 @@ class _SprigListState extends State<SprigList> {
                           widget.onSprigSelected?.call(snapshot.data?[index]);
                         },
                         tileColor: _selectedSprigIndex == index
-                            ? Color.fromARGB(255, 177, 239, 182)
+                            ? Color.fromARGB(255, 248, 214,
+                                253) //Color.fromARGB(255, 177, 239, 182)
                             : null,
                         shape: RoundedRectangleBorder(
                             side: BorderSide(color: Colors.grey, width: 0.5),
                             borderRadius: BorderRadius.circular(4)),
-                        leading: const Icon(Icons.data_object_outlined),
+                        leading: const Icon(Icons.table_rows),
                         title: Text('${snapshot.data?[index].$2.name}'),
                       );
                     }))
@@ -149,32 +154,37 @@ class _SprigListState extends State<SprigList> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: children +
               <Widget>[
-                ElevatedButton.icon(
-                  icon: Icon(Icons.shopping_basket),
-                  label: Text("Add Basket"),
-                  onPressed: () async {
-                    // Wait until we get a user-provided directory
-                    String? selectedDirectory =
-                        await FilePicker.platform.getDirectoryPath();
-                    // If the user actually selected something, we can save it to our application
-                    // settings.
-                    if (selectedDirectory != null) {
-                      await getBaskets().then((baskets) {
-                        baskets.add(selectedDirectory);
-                        // De-deduplicate our list
-                        baskets = baskets.toSet().toList();
-                        saveBaskets(baskets);
-                        // TODO: This could be cleaner
-                        setState(() {
-                          repos = baskets
-                              .map((b) => LocalBasket(
-                                  sprigBinary: sprigBinary, path: b))
-                              .toList();
-                        });
-                      });
-                    }
-                  },
-                )
+                Container(
+                    margin: const EdgeInsets.only(bottom: 10.0),
+                    child: Tooltip(
+                        message:
+                            "Add a local directory containing sprigs to the UI",
+                        child: ElevatedButton.icon(
+                          icon: Icon(Icons.inventory),
+                          label: Text("Add Basket"),
+                          onPressed: () async {
+                            // Wait until we get a user-provided directory
+                            String? selectedDirectory =
+                                await FilePicker.platform.getDirectoryPath();
+                            // If the user actually selected something, we can save it to our application
+                            // settings.
+                            if (selectedDirectory != null) {
+                              await getBaskets().then((baskets) {
+                                baskets.add(selectedDirectory);
+                                // De-deduplicate our list
+                                baskets = baskets.toSet().toList();
+                                saveBaskets(baskets);
+                                // TODO: This could be cleaner
+                                setState(() {
+                                  repos = baskets
+                                      .map((b) => LocalBasket(
+                                          sprigBinary: sprigBinary, path: b))
+                                      .toList();
+                                });
+                              });
+                            }
+                          },
+                        )))
               ],
         );
 

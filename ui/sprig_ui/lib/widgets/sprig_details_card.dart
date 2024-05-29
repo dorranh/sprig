@@ -16,11 +16,13 @@ class SprigDetailsCard extends StatelessWidget {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('${sprigDetails.name}',
+                      Text('Sprig: ${sprigDetails.name}',
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text('Structure: ${sprigDetails.structure}'),
                       Text('Format: ${sprigDetails.format}'),
-                      Text('ID: ${sprigDetails.id}')
+                      Text(''),
+                      Text('ID: ${sprigDetails.id}',
+                          style: const TextStyle(fontSize: 10))
                     ]))));
   }
 }
