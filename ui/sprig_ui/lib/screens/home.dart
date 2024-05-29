@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:sprig_ui/widgets/basket.dart';
+import 'package:sprig_ui/widgets/footer.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 
-class SprigUI extends StatelessWidget {
+// StatefulWidget {
+//   final Map<String, Highlighter> languageHighlighters;
+
+//   const BasketUI({super.key, required this.languageHighlighters});
+
+//   @override
+//   State<BasketUI> createState() => _BasketUIState();
+// }
+
+class SprigUI extends StatefulWidget {
   final Map<String, Highlighter> languageHighlighters;
 
-  const SprigUI({super.key, required this.languageHighlighters});
+  @override
+  State<SprigUI> createState() => _SprigUIState();
 
+  const SprigUI({super.key, required this.languageHighlighters});
+}
+
+class _SprigUIState extends State<SprigUI> {
   @override
   Widget build(BuildContext context) {
     var colorScheme =
@@ -25,7 +40,11 @@ class SprigUI extends StatelessWidget {
               Text('Sprig'),
             ]),
           ),
-          body: BasketUI(languageHighlighters: languageHighlighters),
+          body: BasketUI(
+            languageHighlighters: widget.languageHighlighters,
+          ),
+          persistentFooterButtons: const [Footer()],
+          persistentFooterAlignment: AlignmentDirectional.centerStart,
         ));
   }
 }

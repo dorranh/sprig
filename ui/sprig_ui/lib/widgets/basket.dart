@@ -8,8 +8,10 @@ import 'package:syntax_highlight/syntax_highlight.dart';
 /// The main UI component for managing Sprig baskets.
 class BasketUI extends StatefulWidget {
   final Map<String, Highlighter> languageHighlighters;
-
-  const BasketUI({super.key, required this.languageHighlighters});
+  const BasketUI({
+    super.key,
+    required this.languageHighlighters,
+  });
 
   @override
   State<BasketUI> createState() => _BasketUIState();
@@ -43,11 +45,14 @@ class _BasketUIState extends State<BasketUI> {
           ),
         ],
         children: [
-          SprigList(onSprigSelected: callback),
+          SprigList(
+            onSprigSelected: callback,
+          ),
           SprigDetailsPanel(
-              sprig: selectedSprig!.$2,
-              repo: selectedSprig!.$1,
-              languageHighlighters: widget.languageHighlighters)
+            sprig: selectedSprig!.$2,
+            repo: selectedSprig!.$1,
+            languageHighlighters: widget.languageHighlighters,
+          )
         ],
       );
     } else {

@@ -17,8 +17,7 @@ class SprigList extends StatefulWidget {
 }
 
 /// Helper for querying all configured repos for the sprigs they contain.
-Future<List<BasketSprig>>? listAll(
-    List<LocalBasket> repos, String sprigBinary) async {
+Future<List<BasketSprig>>? listAll(List<LocalBasket> repos) async {
   var allSprigs = await Future.wait(repos.map((repo) => repo
       .list()!
       .then((sprigs) => sprigs.sprigs?.map((s) => (repo, s)).toList())));
@@ -35,18 +34,19 @@ class _SprigListState extends State<SprigList> {
   List<LocalBasket> repos = [];
   int? _selectedSprigIndex;
 
-  final sprigBinary = "/Users/dorran/dev/sprig/clients/python/.venv/bin/sprig";
-
   @override
   void initState() {
     super.initState();
-    getBaskets()
-        .then((basketPaths) => basketPaths
-            .map((p) => LocalBasket(sprigBinary: sprigBinary, path: p))
-            .toList())
-        .then((baskets) {
-      setState(() {
-        repos = baskets;
+
+    getSprigBinaryPath().then((path) {
+      getBaskets()
+          .then((basketPaths) => basketPaths
+              .map((p) => LocalBasket(sprigBinary: path, path: p))
+              .toList())
+          .then((baskets) {
+        setState(() {
+          repos = baskets;
+        });
       });
     });
   }
@@ -54,7 +54,7 @@ class _SprigListState extends State<SprigList> {
   @override
   Widget build(BuildContext context) {
     final asyncSprigWidget = FutureBuilder<List<BasketSprig>>(
-      future: listAll(repos, sprigBinary),
+      future: listAll(repos),
       builder:
           (BuildContext context, AsyncSnapshot<List<BasketSprig>> snapshot) {
         List<Widget> children;
@@ -169,19 +169,20 @@ class _SprigListState extends State<SprigList> {
                             // If the user actually selected something, we can save it to our application
                             // settings.
                             if (selectedDirectory != null) {
-                              await getBaskets().then((baskets) {
-                                baskets.add(selectedDirectory);
-                                // De-deduplicate our list
-                                baskets = baskets.toSet().toList();
-                                saveBaskets(baskets);
-                                // TODO: This could be cleaner
-                                setState(() {
-                                  repos = baskets
-                                      .map((b) => LocalBasket(
-                                          sprigBinary: sprigBinary, path: b))
-                                      .toList();
-                                });
-                              });
+                              await getSprigBinaryPath()
+                                  .then((p) => getBaskets().then((baskets) {
+                                        baskets.add(selectedDirectory);
+                                        // De-deduplicate our list
+                                        baskets = baskets.toSet().toList();
+                                        saveBaskets(baskets);
+                                        // TODO: This could be cleaner
+                                        setState(() {
+                                          repos = baskets
+                                              .map((b) => LocalBasket(
+                                                  sprigBinary: p, path: b))
+                                              .toList();
+                                        });
+                                      }));
                             }
                           },
                         )))

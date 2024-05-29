@@ -5,7 +5,19 @@ Future<List<String>> getBaskets() async {
   return prefs.getStringList('baskets') ?? [];
 }
 
-saveBaskets(List<String> baskets) async {
+Future<void> saveBaskets(List<String> baskets) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setStringList('baskets', baskets);
+}
+
+const defaultSprigBinary = "sprig";
+
+Future<String> getSprigBinaryPath() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('sprigBinary') ?? defaultSprigBinary;
+}
+
+Future<void> saveSprigBinaryPath(String sprigBinary) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('sprigBinary', sprigBinary);
 }
