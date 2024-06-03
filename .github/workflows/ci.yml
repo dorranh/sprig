@@ -3,12 +3,14 @@ name: Continuous Integration
 on:
   pull_request:
     paths:
+      - .github/workflows/ci.yml
       - clients/**
       - src/**
       - flake.nix
       - justfile
   push:
     paths:
+      - .github/workflows/ci.yml
       - clients/**
       - src/**
       - flake.nix

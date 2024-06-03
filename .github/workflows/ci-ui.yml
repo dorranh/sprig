@@ -3,9 +3,11 @@ name: Continuous Integration - Flutter UI
 on:
   pull_request:
     paths:
+      - .github/workflows/ci-ui.yml
       - ui/**
   push:
     paths:
+      - .github/workflows/ci-ui.yml
       - ui/**
 
 jobs:
