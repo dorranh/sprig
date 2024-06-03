@@ -25,6 +25,7 @@ jobs:
           flutter-version: 3.19.5
 
       - run: flutter pub get
+        working-directory: ui/sprig_ui
 
       - name: Build MacOS
         if: runner.os == 'macOS'
