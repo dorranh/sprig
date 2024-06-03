@@ -1,18 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-
-class SprigDetails {
-  String id;
-  String structure; // TODO: Make this an enum
-  String format; // TODO: Make this an enum
-  String? name;
-
-  SprigDetails(
-      {required this.id,
-      required this.structure,
-      required this.format,
-      this.name});
-}
+import 'package:sprig_ui/model.dart';
 
 class Sprig {
   // The name of the sprig
@@ -28,27 +16,14 @@ class Sprigs {
   Sprigs(this.sprigs);
 }
 
-/// Base class for Sprig baskets. A Basket is a repository containing sprigs and related methods.
-abstract class Basket {
-  /// List all the sprigs in the basket.
-  Future<Sprigs>? list();
-
-  /// Get the details of a specific sprig.
-  Future<SprigDetails>? getDetails(Sprig sprig);
-}
-
 /// A basket hosted on the local filesystem.
-class LocalBasket implements Basket {
-  /// The path to the sprig binary.
-  String sprigBinary;
-
+class LocalBasket {
   /// The path to the basket's directory.
   String path;
 
-  LocalBasket({this.sprigBinary = "sprig", this.path = "."});
+  LocalBasket({this.path = "."});
 
-  @override
-  Future<Sprigs>? list() {
+  Future<Sprigs>? list(String sprigBinary) {
     var result = Process.run(sprigBinary, ["list"],
         runInShell: false, workingDirectory: path);
 
@@ -62,8 +37,7 @@ class LocalBasket implements Basket {
     });
   }
 
-  @override
-  Future<SprigDetails>? getDetails(Sprig sprig) {
+  Future<SprigDetails>? getDetails(Sprig sprig, String sprigBinary) {
     var result = Process.run(sprigBinary, ["get", "--name", sprig.name!],
         runInShell: false, workingDirectory: path);
 
@@ -71,13 +45,7 @@ class LocalBasket implements Basket {
       if (r.exitCode != 0) {
         throw Exception(["EXPLODE. The exit code was nonzero. ${r.stderr}"]);
       }
-      final output = jsonDecode(r.stdout);
-
-      return SprigDetails(
-          id: output['id'],
-          structure: output['structure'],
-          format: output['format'],
-          name: output['name']);
+      return SprigDetails.fromJson(jsonDecode(r.stdout));
     });
   }
 }

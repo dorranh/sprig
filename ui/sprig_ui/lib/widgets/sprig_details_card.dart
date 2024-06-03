@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sprig_ui/model.dart';
 import 'package:sprig_ui/repo.dart';
 
 class SprigDetailsCard extends StatelessWidget {

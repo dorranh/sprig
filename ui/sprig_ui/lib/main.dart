@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sprig_ui/screens/home.dart';
 import 'package:sprig_ui/utils/settings.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
@@ -28,7 +29,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize highlighter instances for each language
   var highlighters = await initHighlighters();
-  runApp(SprigUI(
+  runApp(ProviderScope(
+      child: SprigUI(
     languageHighlighters: highlighters,
-  ));
+  )));
 }

@@ -1,23 +1,38 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sprig_ui/repo.dart';
 
-Future<List<String>> getBaskets() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getStringList('baskets') ?? [];
-}
+part 'settings.g.dart';
 
-Future<void> saveBaskets(List<String> baskets) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setStringList('baskets', baskets);
+@riverpod
+class BasketConfig extends _$BasketConfig {
+  @override
+  Future<List<LocalBasket>> build() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final basketPaths = prefs.getStringList('baskets') ?? [];
+    return basketPaths.map((path) => LocalBasket(path: path)).toList();
+  }
+
+  Future<void> setBaskets(List<LocalBasket> baskets) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('baskets', baskets.map((b) => b.path).toList());
+    state = AsyncData(baskets);
+  }
 }
 
 const defaultSprigBinary = "sprig";
 
-Future<String> getSprigBinaryPath() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('sprigBinary') ?? defaultSprigBinary;
-}
+@riverpod
+class BackendConfig extends _$BackendConfig {
+  @override
+  Future<String> build() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('sprigBinary') ?? defaultSprigBinary;
+  }
 
-Future<void> saveSprigBinaryPath(String sprigBinary) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString('sprigBinary', sprigBinary);
+  Future<void> setBinaryPath(String binaryPath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sprigBinary', binaryPath);
+    state = AsyncData(binaryPath);
+  }
 }
