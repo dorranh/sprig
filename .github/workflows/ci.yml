@@ -3,14 +3,14 @@ name: Continuous Integration
 on:
   pull_request:
     paths:
-      - clients
-      - src
+      - clients/**
+      - src/**
       - flake.nix
       - justfile
   push:
     paths:
-      - clients
-      - src
+      - clients/**
+      - src/**
       - flake.nix
       - justfile
 

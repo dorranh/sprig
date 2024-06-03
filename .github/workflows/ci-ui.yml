@@ -3,10 +3,10 @@ name: Continuous Integration - Flutter UI
 on:
   pull_request:
     paths:
-      - ui
+      - ui/**
   push:
     paths:
-      - ui
+      - ui/**
 
 jobs:
   tests:
