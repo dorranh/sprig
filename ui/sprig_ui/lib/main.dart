@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sprig_ui/screens/home.dart';
-import 'package:sprig_ui/utils/settings.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 
 final SUPPORTED_LANGUAGES = ["python"];
