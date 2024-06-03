@@ -22,3 +22,21 @@ test-src:
   cd src && poetry run pytest
 
 test: test-src
+
+test-ui:
+  cd ui/sprig_ui && flutter test
+
+install-ui:
+  cd ui/sprig_ui && flutter pub get
+
+lint-ui:
+  cd ui/sprig_ui && flutter analyze --no-fatal-infos
+
+build-ui-macos:
+  cd ui/sprig_ui && flutter build macos
+
+build-ui-linux:
+  cd ui/sprig_ui && flutter build linux
+
+build-ui-windows:
+  cd ui/sprig_ui && flutter build windows

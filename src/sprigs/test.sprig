@@ -1,0 +1,11 @@
+format: sql
+id: 79959d03-9783-4b22-b456-0b6d1b480bc7
+name: test
+read_config:
+  start: 0
+  stop: null
+storage:
+  connection_string: sqlite:////Users/dorran/dev/sprig/src/tmpvqv39ibq/test.sqlite
+  query: SELECT * FROM test_data
+structure: rows
+
