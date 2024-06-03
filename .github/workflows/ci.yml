@@ -2,8 +2,16 @@ name: Continuous Integration
 
 on:
   pull_request:
+    paths:
+      - clients
+      - src
+      - flake.nix
+      - justfile
   push:
-
+    - clients
+    - src
+    - flake.nix
+    - justfile
 
 jobs:
   tests:
