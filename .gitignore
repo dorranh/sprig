@@ -166,3 +166,9 @@ devenv.local.nix
 
 # pre-commit
 .pre-commit-config.yaml
+
+# Rust stuff
+debug/
+target/
+**/*.rs.bk
+*.pdb

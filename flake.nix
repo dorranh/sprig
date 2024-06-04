@@ -12,6 +12,8 @@
     in {
       devShells.default = pkgs.mkShell {
         packages = [
+          pkgs.cargo
+          pkgs.rustfmt
           pkgs.just
           pkgs.python3
           pkgs.poetry
