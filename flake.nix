@@ -13,6 +13,7 @@
       devShells.default = pkgs.mkShell {
         packages = [
           pkgs.cargo
+          pkgs.libiconv # Required for cargo builds on MacOS
           pkgs.rustfmt
           pkgs.just
           pkgs.python3

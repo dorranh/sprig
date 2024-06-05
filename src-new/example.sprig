@@ -1,0 +1,10 @@
+format: csv
+id: 5d598a8b-5695-45a1-8f5e-36223c575429
+name: demo-sprig
+read_config:
+  start: 2
+  stop: null
+storage:
+  path: ./example-data/my-dataset.csv
+structure: rows
+
