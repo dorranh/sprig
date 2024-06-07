@@ -2,8 +2,10 @@ pub mod model;
 
 use std::fs;
 use std::io;
+use std::path::Path;
 
 use model::Sprig;
+use model::Sprigs;
 
 use std::path::PathBuf;
 
@@ -32,6 +34,7 @@ enum Commands {
         #[arg(long)]
         name: String,
     },
+    List {},
 }
 
 pub struct LocalBasket {
@@ -40,6 +43,8 @@ pub struct LocalBasket {
 
 pub trait Basket {
     fn get_sprig(&self, name: &str) -> Result<Sprig, std::io::Error>;
+
+    fn list_sprigs(&self) -> Result<Vec<String>, std::io::Error>;
 }
 
 impl Basket for LocalBasket {
@@ -62,9 +67,27 @@ impl Basket for LocalBasket {
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         Ok(sprig)
     }
+
+    fn list_sprigs(&self) -> Result<Vec<String>, std::io::Error> {
+        {
+            let sprig_files = Path::read_dir(&self.path)?;
+            let names = sprig_files
+                .filter_map(|x| x.ok())
+                .map(|f| f.path())
+                .filter_map(|p| {
+                    if p.extension().map_or(false, |ext| ext == "sprig") {
+                        p.as_os_str().to_str().map(|p| p.to_owned())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            Ok(names)
+        }
+    }
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), std::io::Error> {
     let cli = Cli::parse();
 
     let basket = match cli.basket {
@@ -74,12 +97,21 @@ fn main() -> std::io::Result<()> {
         },
     };
 
-    match &cli.command {
+    let result: Result<String, io::Error> = match &cli.command {
         Some(Commands::Get { name }) => {
-            let sprig = basket.get_sprig(name);
-            println!("{:?}", sprig);
+            let sprig = basket.get_sprig(name)?;
+            let json = serde_json::to_string(&sprig);
+            json.map_err(|e| io::Error::new(io::ErrorKind::Other, e))
         }
-        None => {}
-    }
+        Some(Commands::List {}) => {
+            let sprigs = Sprigs {
+                sprigs: basket.list_sprigs()?,
+            };
+            let json = serde_json::to_string(&sprigs);
+            json.map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        }
+        None => Ok("".to_string()),
+    };
+    println!("{}", result?);
     Ok(())
 }

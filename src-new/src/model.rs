@@ -34,6 +34,14 @@ pub struct RowConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+// #[serde(rename_all = "lowercase")]
+#[serde(untagged)]
+pub enum Storage {
+    Local(LocalStorageConfig),
+    Database(DatabaseStorageConfig),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Sprig {
     id: Uuid,
     name: String,
@@ -44,9 +52,6 @@ pub struct Sprig {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-// #[serde(rename_all = "lowercase")]
-#[serde(untagged)]
-pub enum Storage {
-    Local(LocalStorageConfig),
-    Database(DatabaseStorageConfig),
+pub struct Sprigs {
+    pub sprigs: Vec<String>,
 }
