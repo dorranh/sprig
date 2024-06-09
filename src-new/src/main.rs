@@ -1,7 +1,7 @@
+pub mod io;
 pub mod model;
 
 use std::fs;
-use std::io;
 use std::path::Path;
 
 use model::Sprig;
@@ -34,6 +34,12 @@ enum Commands {
         #[arg(long)]
         name: String,
     },
+    /// Get a sprig by name
+    Read {
+        /// The name of the Sprig to read
+        #[arg(long)]
+        name: String,
+    },
     List {},
 }
 
@@ -45,26 +51,43 @@ pub trait Basket {
     fn get_sprig(&self, name: &str) -> Result<Sprig, std::io::Error>;
 
     fn list_sprigs(&self) -> Result<Vec<String>, std::io::Error>;
+
+    // TODO: We probably want to accept a BufferedWriter or something like that
+    // Rather than creating inside the function
+    fn read(&self, name: &str) -> Result<(), std::io::Error>;
 }
 
 impl Basket for LocalBasket {
     /*
        TODO. Still need to port the following from Python:
-       - [ ] list_sprigs
-       - [ ] read
-         - [ ] CSV IO + Read
+       - [X] list_sprigs
+       - [X] read
+         - [X] CSV IO + Read
          - [ ] SQL IO
        - [ ] create
     */
 
     // FIXME: Could really use some more friendly error messages
 
+    fn read(&self, name: &str) -> Result<(), std::io::Error> {
+        let sprig = self.get_sprig(name)?;
+        let contents = io::read(&sprig)?;
+        match contents {
+            io::SprigContents::Arrow(reader) => {
+                reader.take(1).for_each(|batch| {
+                    println!("{:?}", batch);
+                });
+            }
+        }
+        Ok(())
+    }
+
     fn get_sprig(&self, name: &str) -> Result<Sprig, std::io::Error> {
         let sprig_file = self.path.join(name).with_extension("sprig");
         println!("Attempting to read sprig at: {:?}", sprig_file);
         let raw_sprig_data: String = fs::read_to_string(sprig_file)?;
         let sprig: Sprig = serde_yaml::from_str(&raw_sprig_data)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
         Ok(sprig)
     }
 
@@ -97,18 +120,22 @@ fn main() -> Result<(), std::io::Error> {
         },
     };
 
-    let result: Result<String, io::Error> = match &cli.command {
+    let result: Result<String, std::io::Error> = match &cli.command {
         Some(Commands::Get { name }) => {
             let sprig = basket.get_sprig(name)?;
             let json = serde_json::to_string(&sprig);
-            json.map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+            json.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+        }
+        Some(Commands::Read { name }) => {
+            let _ = basket.read(name);
+            Ok("Read".to_string())
         }
         Some(Commands::List {}) => {
             let sprigs = Sprigs {
                 sprigs: basket.list_sprigs()?,
             };
             let json = serde_json::to_string(&sprigs);
-            json.map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+            json.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
         }
         None => Ok("".to_string()),
     };

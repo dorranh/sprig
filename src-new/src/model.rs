@@ -18,19 +18,19 @@ pub enum Format {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LocalStorageConfig {
-    path: String,
+    pub path: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatabaseStorageConfig {
-    connection_string: String, // FIXME: Need to handle secrets, etc properly.
-    query: String,
+    pub connection_string: String, // FIXME: Need to handle secrets, etc properly.
+    pub query: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RowConfig {
-    start: i64,
-    stop: Option<i64>,
+    pub start: i64,
+    pub stop: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,12 +43,12 @@ pub enum Storage {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Sprig {
-    id: Uuid,
-    name: String,
-    storage: Storage,
-    structure: Structure,
-    format: Format,
-    read_config: RowConfig, // TODO: Add other config here
+    pub id: Uuid,
+    pub name: String,
+    pub storage: Storage,
+    pub structure: Structure,
+    pub format: Format,
+    pub read_config: RowConfig, // TODO: Add other config here
 }
 
 #[derive(Debug, Serialize, Deserialize)]
