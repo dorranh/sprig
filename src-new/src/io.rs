@@ -1,6 +1,7 @@
 use std::{
     fs::File,
-    io::{BufReader, Error, ErrorKind},
+    io::{BufRead, BufReader, Cursor, Error, ErrorKind, Seek},
+    path::{Path, PathBuf},
     sync::Arc,
 };
 
@@ -18,11 +19,17 @@ pub enum SprigContents {
     Arrow(Box<dyn RecordBatchReader>), // FIXME: This should contain the arrow type instead
 }
 
+fn resolve_path(basket_path: PathBuf, data_file_path: PathBuf) -> Result<PathBuf, Error> {
+    let full_unresolved_path = basket_path.join(data_file_path);
+    full_unresolved_path.canonicalize()
+}
+
 // FIXME: Add methods for writing out usage metadata
 
 // TODO: It might be cleaner to move these read methods into traits
 fn read_rows(
     sprig: &Sprig,
+    basket_path: PathBuf,
     start: i64,
     stop: Option<i64>,
 ) -> Result<Box<dyn RecordBatchReader>, std::io::Error> {
@@ -30,10 +37,27 @@ fn read_rows(
         Csv => match &sprig.storage {
             Local(LocalStorageConfig { path }) => {
                 let format = Format::default();
-                let (schema, n_records) = format
-                    .infer_schema(BufReader::new(File::open(path)?), None)
-                    .map_err(|e| Error::new(ErrorKind::Other, e))?;
+                let data_file_path = resolve_path(basket_path, PathBuf::from(path))?;
+                // Create a reader for inferring the schema, skipping header row
+                let mut reader = BufReader::new(File::open(data_file_path)?);
+                // Seek ahead just past the first newline, if it exists.
+                reader.read_until(b'\n', &mut Vec::new())?;
+                // Note the position so we can rewind to it
+                let start_offset = reader.stream_position()?;
 
+                // DEBUGGING
+                // reader.lines().for_each(|l| println!("{:?}", l));
+                // reader.seek(std::io::SeekFrom::Start(start_offset))?;
+
+                let (schema, n_records) = format
+                    .infer_schema(&mut reader, None)
+                    .map_err(|e| Error::new(ErrorKind::Other, e))?;
+                if n_records == 0 {
+                    return Err(Error::new(
+                        ErrorKind::Other,
+                        "No records found in the input file",
+                    ));
+                }
                 let start_usize =
                     usize::try_from(start).map_err(|e| Error::new(ErrorKind::Other, e))?;
                 // Note: using the value returned by infer_schema is a bit sketchy here since it assumes that infer_schema has scanned
@@ -43,9 +67,11 @@ fn read_rows(
                     None => n_records,
                 };
 
+                // Rewind our buffer to the first line of data
+                reader.seek(std::io::SeekFrom::Start(start_offset))?;
                 let csv = ReaderBuilder::new(Arc::new(schema))
                     .with_bounds(start_usize, stop_usize)
-                    .build(BufReader::new(File::open(path)?))
+                    .build(reader)
                     .unwrap();
                 Ok(Box::new(csv))
             }
@@ -60,10 +86,15 @@ fn read_rows(
     }
 }
 
-pub fn read(sprig: &Sprig) -> Result<SprigContents, std::io::Error> {
+pub fn read(sprig: &Sprig, basket_path: PathBuf) -> Result<SprigContents, std::io::Error> {
     match sprig.structure {
-        Rows => read_rows(sprig, sprig.read_config.start, sprig.read_config.stop)
-            .map(|r| SprigContents::Arrow(r)),
+        Rows => read_rows(
+            sprig,
+            basket_path,
+            sprig.read_config.start,
+            sprig.read_config.stop,
+        )
+        .map(|r| SprigContents::Arrow(r)),
         Columns => {
             unimplemented!()
         }

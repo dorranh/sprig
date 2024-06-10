@@ -5,6 +5,6 @@ read_config:
   start: 2
   stop: null
 storage:
-  path: ./example-data/my-dataset.csv
+  path: ../example-data/my-dataset.csv
 structure: rows
 
