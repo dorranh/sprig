@@ -1,3 +1,5 @@
+pub mod sql;
+
 use std::{
     fs::File,
     io::{BufRead, BufReader, Cursor, Error, ErrorKind, Seek},

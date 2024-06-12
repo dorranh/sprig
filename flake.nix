@@ -11,16 +11,18 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.default = pkgs.mkShell {
-        packages = [
-          # pkgs.cargo
-          pkgs.libiconv # Required for cargo builds on MacOS
-          # pkgs.rustfmt
-          pkgs.just
-          pkgs.python3
-          pkgs.poetry
-          pkgs.alejandra
-          pkgs.nodejs_21
-        ];
+        packages =
+          [
+            # pkgs.cargo
+            pkgs.libiconv # Required for cargo builds on MacOS
+            # pkgs.rustfmt
+            pkgs.just
+            pkgs.python3
+            pkgs.poetry
+            pkgs.alejandra
+            pkgs.nodejs_21
+          ]
+          ++ (pkgs.lib.optionals pkgs.stdenv.isDarwin [pkgs.darwin.apple_sdk.frameworks.Security]);
 
         shellHook = ''
           export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib";

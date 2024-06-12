@@ -4,12 +4,18 @@ pub mod model;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
+use std::thread;
 
 use arrow::array::RecordBatchWriter;
 use arrow::ipc::writer::StreamWriter;
+use futures::Future;
+use futures::TryFutureExt;
+use io::sql::SyncSqlClient;
 use io::SprigContents;
 use model::Sprig;
 use model::Sprigs;
+use sqlx::query;
+use sqlx::SqlitePool;
 
 use std::path::PathBuf;
 
@@ -116,6 +122,23 @@ fn main() -> Result<(), std::io::Error> {
             path: PathBuf::from("."),
         },
     };
+
+    async fn do_query(pool: sqlx::SqlitePool) -> Result<(i64,), sqlx::Error> {
+        sqlx::query_as("SELECT $1")
+            .bind(150_i64)
+            .fetch_one(&pool)
+            .await
+    }
+
+    let sql_client = SyncSqlClient::new(|| {
+        SqlitePool::connect("sqlite::memory:")
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    })?;
+
+    let query_result = sql_client
+        .with_pool(do_query)
+        .expect("Something went very wrong!");
+    println!("{:?}", query_result);
 
     match &cli.command {
         Some(Commands::Get { name }) => {
