@@ -123,6 +123,7 @@ fn main() -> Result<(), std::io::Error> {
         },
     };
 
+    // Box<dyn sqlx::Row> is a possibility for a more dynamic return type
     async fn do_query(pool: sqlx::SqlitePool) -> Result<(i64,), sqlx::Error> {
         sqlx::query_as("SELECT $1")
             .bind(150_i64)
