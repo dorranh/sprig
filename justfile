@@ -1,27 +1,34 @@
-default: install lint test
+default: install lint test build
 
-install: install-client install-src
+install: install-client
 
 install-client:
   cd clients/python && poetry install
 
-install-src:
-  cd src && poetry install
-
-lint-client:
+lint-client: install
   cd clients/python && poetry run pyright
   cd clients/python && poetry run ruff check
 
 lint-src:
-  cd src && poetry run pyright
-  cd src && poetry run ruff check
+  cd src && cargo fmt --check
+  cd src && cargo clippy
 
 lint: lint-client lint-src
 
-test-src:
-  cd src && poetry run pytest
-
 test: test-src
+
+test-src:
+  cd src && cargo test
+
+build:
+  cd src && cargo build
+
+export PATH := justfile_directory() + "/src/target/debug:" + env_var('PATH')
+
+test-integration: install build
+  cd examples/python-script && poetry run --directory ../../clients/python -- python example-python-usage.py
+
+# UI-specific recipes. Ideally we could include these in the combined recipes above in the future.
 
 test-ui:
   cd ui/sprig_ui && flutter test

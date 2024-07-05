@@ -17,6 +17,14 @@
           pkgs.poetry
           pkgs.alejandra
           pkgs.nodejs_21
+
+          # Rust toolchain
+          pkgs.libiconv # Required for cargo builds on MacOS
+          pkgs.clippy
+          pkgs.rustc
+          pkgs.cargo
+          pkgs.rustfmt
+          pkgs.rust-analyzer
         ];
 
         shellHook = ''

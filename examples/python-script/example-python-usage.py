@@ -1,35 +1,16 @@
-
 from pprint import pprint
 
-from sprig.client.basket import LocalBasket
-from sprig.model import *
-
-# # In this example we CREATE a sprig
-#     sprig = Sprig(
-#         id=uuid4(),
-#         name="demo-sprig",
-#         structure=Structure.ROWS,
-#         format=Format.CSV,
-#         read_config=RowConfig(start=2, stop=None),
-#         storage=LocalStorageConfig(path="./example-data/my-dataset.csv"),
-#     )
-#     print(f"Here is your sprig: {sprig}")
-#     print(read(sprig).to_pandas())
-#
-
-# FIXME [Dorran]: Currently left off here during refactor. Need to clean up
-# Basket API and use it in the examples below.
+from sprig.basket import LocalBasket
+from sprig.model import LocalStorageConfig, Rows
 
 
 def main():
     print("This is an example script which leverages sprig. Let's get started.")
 
-    basket = LocalBasket()
+    basket = LocalBasket("./sprigs")
 
     print("First lets list the sprigs available to us:")
     pprint(basket.list_sprigs())
-
-    # FIXME: Add an example of importing existing data into a new sprig
 
     print("Running first example 'analysis'")
     my_analysis(basket)

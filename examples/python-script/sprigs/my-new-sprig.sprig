@@ -5,6 +5,5 @@ read_config:
   start: 0
   stop: null
 storage:
-  path: example-data/my-updated-data.csv
+  path: ../example-data/my-updated-data.csv
 structure: rows
-

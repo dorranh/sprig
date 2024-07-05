@@ -40,11 +40,20 @@ class LocalBasket(Basket):
     """
     A Basket hosted in the local filesystem
 
-    Currently this assumes that sprigs are stored in ./sprigs
+    This basket uses the sprig CLI as its back-end.
     """
 
+    def __init__(self, basket_path: str, sprig_backend_path: str = "sprig"):
+        """
+        Args:
+            basket_path: The path to the basket. A basket is a directory containing .sprig files.
+            sprig_backend_path: The path to the sprig CLI which will be used for interacting with the basket.
+        """
+        self.basket_path = basket_path
+        self.sprig_backend_path = sprig_backend_path
+
     def list_sprigs(self) -> list[Sprig]:
-        stream = subprocess.Popen("sprig list", shell=True, stdout=subprocess.PIPE)
+        stream = subprocess.Popen(f"{self.sprig_backend_path} --basket {self.basket_path} list", shell=True, stdout=subprocess.PIPE)
         stream.wait(timeout=10)
         result = stream.stdout.read()  # type: ignore
         names = json.loads(result)["sprigs"]  # type: ignore
@@ -52,7 +61,7 @@ class LocalBasket(Basket):
 
     def get_sprig(self, name: str) -> Sprig:
         stream = subprocess.Popen(
-            f"sprig get --name {name}", shell=True, stdout=subprocess.PIPE
+            f"{self.sprig_backend_path} --basket {self.basket_path} get --name {name}", shell=True, stdout=subprocess.PIPE
         )
         stream.wait(timeout=10)
         sprig = Sprig.model_validate_json(stream.stdout.read())  # type: ignore
@@ -61,7 +70,7 @@ class LocalBasket(Basket):
     def read_sprig(self, name: str) -> Rows:
         # Call the CLI and get the arrow ipc stream it outputs
         stream = subprocess.Popen(
-            f"sprig read --name {name}", shell=True, stdout=subprocess.PIPE
+            f"{self.sprig_backend_path} --basket {self.basket_path} read --name {name}", shell=True, stdout=subprocess.PIPE
         )
         stream.wait(timeout=60)
         reader = ipc.open_stream(stream.stdout)
