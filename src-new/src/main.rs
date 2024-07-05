@@ -1,15 +1,12 @@
+pub mod basket;
 pub mod io;
 pub mod model;
 
-use std::fs;
 use std::io::Write;
-use std::path::Path;
 
-use arrow::array::RecordBatchWriter;
 use arrow::ipc::writer::StreamWriter;
-use io::SprigContents;
-use model::Sprig;
-use model::Sprigs;
+use basket::Basket;
+use basket::LocalBasket;
 
 use std::path::PathBuf;
 
@@ -23,9 +20,6 @@ pub(crate) struct Cli {
     #[arg(short, long, value_name = "BASKET")]
     basket: Option<PathBuf>,
 
-    // /// Turn debugging information on
-    // #[arg(short, long, action = clap::ArgAction::Count)]
-    // debug: u8,
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -38,73 +32,16 @@ enum Commands {
         #[arg(long)]
         name: String,
     },
-    /// Get a sprig by name
+    /// Read the contents of a sprig, writing them to stdout.
+    /// Note that the data you get back will depend on the structure of the sprig.
+    /// Rows will be returned as a stream of Arrow RecordBatches.
     Read {
         /// The name of the Sprig to read
         #[arg(long)]
         name: String,
     },
+    /// List the names of the sprigs in the current basket
     List {},
-}
-
-pub struct LocalBasket {
-    path: PathBuf,
-}
-
-pub trait Basket {
-    fn get_sprig(&self, name: &str) -> Result<Sprig, std::io::Error>;
-
-    fn list_sprigs(&self) -> Result<Sprigs, std::io::Error>;
-
-    // TODO: We probably want to accept a BufferedWriter or something like that
-    // Rather than creating inside the function
-    fn read_sprig(&self, sprig: Sprig) -> Result<SprigContents, std::io::Error>;
-}
-
-impl Basket for LocalBasket {
-    /*
-       TODO. Still need to port the following from Python:
-       - [X] list_sprigs
-       - [X] read
-         - [X] CSV IO + Read
-         - [ ] SQL IO
-       - [ ] create
-    */
-
-    // FIXME: Could really use some more friendly error messages
-
-    fn read_sprig(&self, sprig: Sprig) -> Result<SprigContents, std::io::Error> {
-        io::read(&sprig, self.path.to_owned())
-    }
-
-    fn get_sprig(&self, name: &str) -> Result<Sprig, std::io::Error> {
-        let sprig_file = self.path.join(name).with_extension("sprig");
-        let raw_sprig_data: String = fs::read_to_string(sprig_file)?;
-        let sprig: Sprig = serde_yaml::from_str(&raw_sprig_data)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(sprig)
-    }
-
-    fn list_sprigs(&self) -> Result<Sprigs, std::io::Error> {
-        {
-            let sprig_files = Path::read_dir(&self.path)?;
-            let names = sprig_files
-                .filter_map(|x| x.ok())
-                .map(|f| f.path())
-                .filter_map(|p| {
-                    if p.extension().map_or(false, |ext| ext == "sprig") {
-                        // Get the file stem, doing a bit of type wrangling along the way
-                        p.file_stem()
-                            .map(|os_str| os_str.to_str().map(|s| s.to_owned()))
-                    } else {
-                        None
-                    }
-                })
-                .flatten()
-                .collect();
-            Ok(Sprigs { sprigs: names })
-        }
-    }
 }
 
 fn main() -> Result<(), std::io::Error> {

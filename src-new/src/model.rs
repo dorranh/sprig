@@ -1,8 +1,11 @@
+//! Sprig's core data model
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+/// The structure of a sprig's underlying data.
 pub enum Structure {
     Rows,
     Columns,
@@ -11,6 +14,7 @@ pub enum Structure {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+/// The format in which the sprig is stored.
 pub enum Format {
     Csv,
     Sql,
@@ -34,7 +38,6 @@ pub struct RowConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-// #[serde(rename_all = "lowercase")]
 #[serde(untagged)]
 pub enum Storage {
     Local(LocalStorageConfig),
