@@ -80,15 +80,13 @@ fn read_rows(
 
                 Ok(Box::new(csv))
             }
-            s => {
-                return Err(Error::new(
-                    ErrorKind::Other,
-                    format!(
-                        "The provided storage type is not supported for the CSV format: {:?}",
-                        s
-                    ),
-                ));
-            }
+            s => Err(Error::new(
+                ErrorKind::Other,
+                format!(
+                    "The provided storage type is not supported for the CSV format: {:?}",
+                    s
+                ),
+            )),
         },
         Sql => {
             unimplemented!("Support for SQL formats has not yet been implemented.")
@@ -105,7 +103,7 @@ pub fn read(sprig: &Sprig, basket_path: PathBuf) -> Result<SprigContents, std::i
             sprig.read_config.start,
             sprig.read_config.stop,
         )
-        .map(|r| SprigContents::Arrow(r)),
+        .map(SprigContents::Arrow),
         Columns => {
             unimplemented!("Support for reading columnar data has not yet been implemented.")
         }

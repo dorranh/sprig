@@ -34,5 +34,5 @@ jobs:
       # Enable Actions caching for our local Nix builds
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Build and lint the project
+      - name: Lint and build the project
         run: nix develop --command 'just'

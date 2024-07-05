@@ -1,5 +1,5 @@
 [package]
-name = "sprig-cli"
+name = "sprig"
 version = "0.1.0"
 edition = "2021"
 description = "CLI for managing sprigs"
