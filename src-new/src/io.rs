@@ -1,32 +1,37 @@
+//! Utilities for reading and writing the actual contents of a sprig
+//!
+//! TODO
+//!   - [ ] Move read methods into traits
+//!   - [ ] Add logic for writing out usage metadata
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Cursor, Error, ErrorKind, Seek},
-    path::{Path, PathBuf},
+    io::{BufRead, BufReader, Error, ErrorKind, Seek},
+    path::PathBuf,
     sync::Arc,
 };
 
-use arrow::{
-    array::{ArrayRef, Int32Array, RecordBatch, RecordBatchReader, StringArray},
-    error::ArrowError,
-};
+use arrow::array::RecordBatchReader;
 use arrow_csv::{reader::Format, ReaderBuilder};
 
 use crate::model::{
     Format::Csv, Format::Sql, LocalStorageConfig, Sprig, Storage::Local, Structure::Blob,
     Structure::Columns, Structure::Rows,
 };
+
+/// The actual contents of a sprig (i.e. the data). Can have different types
+/// depending on the structure of the sprig.
 pub enum SprigContents {
+    /// Data in Arrow format
     Arrow(Box<dyn RecordBatchReader>), // FIXME: This should contain the arrow type instead
 }
 
+/// Helper function to resolve a path relative to the basket path
 fn resolve_path(basket_path: PathBuf, data_file_path: PathBuf) -> Result<PathBuf, Error> {
     let full_unresolved_path = basket_path.join(data_file_path);
     full_unresolved_path.canonicalize()
 }
 
-// FIXME: Add methods for writing out usage metadata
-
-// TODO: It might be cleaner to move these read methods into traits
+/// Read a sprig made up of rows
 fn read_rows(
     sprig: &Sprig,
     basket_path: PathBuf,
@@ -45,13 +50,11 @@ fn read_rows(
                 // Note the position so we can rewind to it
                 let start_offset = reader.stream_position()?;
 
-                // DEBUGGING
-                // reader.lines().for_each(|l| println!("{:?}", l));
-                // reader.seek(std::io::SeekFrom::Start(start_offset))?;
-
+                // Infer the file's schema
                 let (schema, n_records) = format
                     .infer_schema(&mut reader, None)
                     .map_err(|e| Error::new(ErrorKind::Other, e))?;
+
                 if n_records == 0 {
                     return Err(Error::new(
                         ErrorKind::Other,
@@ -69,23 +72,31 @@ fn read_rows(
 
                 // Rewind our buffer to the first line of data
                 reader.seek(std::io::SeekFrom::Start(start_offset))?;
+
                 let csv = ReaderBuilder::new(Arc::new(schema))
                     .with_bounds(start_usize, stop_usize)
                     .build(reader)
                     .unwrap();
+
                 Ok(Box::new(csv))
             }
-            _ => {
-                // TODO: Return a nice error here
-                unimplemented!()
+            s => {
+                return Err(Error::new(
+                    ErrorKind::Other,
+                    format!(
+                        "The provided storage type is not supported for the CSV format: {:?}",
+                        s
+                    ),
+                ));
             }
         },
         Sql => {
-            unimplemented!()
+            unimplemented!("Support for SQL formats has not yet been implemented.")
         }
     }
 }
 
+/// Read the contents of a sprig
 pub fn read(sprig: &Sprig, basket_path: PathBuf) -> Result<SprigContents, std::io::Error> {
     match sprig.structure {
         Rows => read_rows(
@@ -96,10 +107,12 @@ pub fn read(sprig: &Sprig, basket_path: PathBuf) -> Result<SprigContents, std::i
         )
         .map(|r| SprigContents::Arrow(r)),
         Columns => {
-            unimplemented!()
+            unimplemented!("Support for reading columnar data has not yet been implemented.")
         }
         Blob => {
-            unimplemented!()
+            unimplemented!(
+                "Support for reading arbitrary binary data has not yet been implemented."
+            )
         }
     }
 }
